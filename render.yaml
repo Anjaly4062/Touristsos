@@ -36,3 +36,4 @@ services:
         value: "true"
       - key: DB_SSL_CA
         value: "/etc/secrets/ca.pem"
+
