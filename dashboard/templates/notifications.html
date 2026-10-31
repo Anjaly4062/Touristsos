@@ -73,9 +73,20 @@
         <tbody>
             {% for alert in alerts %}
             <tr>
-                <td>{{ alert.id }}</td>
-                <td>{{ alert.tourist.name }}</td>
-                <td>{{ alert.device.id }}</td>
+                <td><strong>#{{ alert.id }}</strong></td>
+                <td>
+                    <strong>{{ alert.tourist.name }}</strong>
+                    <div style="font-size: 0.85em; color: #475569;">Code: {{ alert.tourist.tourist_code }} | Tel: {{ alert.tourist.phone }}</div>
+                    {% if alert.tourist.emergency_contact_name %}
+                    <div style="font-size: 0.8em; color: #b91c1c;">Emergency: {{ alert.tourist.emergency_contact_name }} ({{ alert.tourist.emergency_contact_phone }})</div>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ alert.device.device_code }}</strong>
+                    {% if alert.device.device_name and alert.device.device_name != alert.device.device_code %}
+                    <div style="font-size: 0.85em; color: #64748b;">{{ alert.device.device_name }}</div>
+                    {% endif %}
+                </td>
                 <td>{{ alert.latitude|default:"N/A" }}</td>
                 <td>{{ alert.longitude|default:"N/A" }}</td>
                 <td>{{ alert.created_at|date:"d-m-Y" }}</td>
@@ -87,7 +98,7 @@
 
             {% empty %}
             <tr>
-                <td colspan="8">No SOS notifications found.</td>
+                <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">No SOS notifications found.</td>
             </tr>
             {% endfor %}
         </tbody>

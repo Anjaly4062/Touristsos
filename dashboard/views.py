@@ -380,43 +380,122 @@ from .models import TouristAlert, Tourist, SOSDevice
 @csrf_exempt
 @require_POST
 def create_tourist_alert(request):
+    """
+    API endpoint for ESP32 and IoT devices to trigger an SOS alert.
+    Expected payload from ESP32:
+    {
+        "device_id": "SOS001",
+        "latitude": 9.6312,
+        "longitude": 76.5900,
+        "message": "Emergency! Tourist needs help."
+    }
+    """
+    # 1. Parse JSON request body
     try:
         data = json.loads(request.body)
-
-        tourist = Tourist.objects.get(id=data['tourist_id'])
-        device = SOSDevice.objects.get(id=data['device_id'])
-
-        alert = TouristAlert.objects.create(
-            tourist=tourist,
-            device=device,
-            latitude=data.get('latitude'),
-            longitude=data.get('longitude'),
-        )
-
-        return JsonResponse({
-            'success': True,
-            'message': 'SOS alert created successfully',
-            'alert_id': alert.id,
-            'status': alert.status
-        }, status=201)
-
-    except Tourist.DoesNotExist:
+    except (json.JSONDecodeError, UnicodeDecodeError, TypeError):
         return JsonResponse({
             'success': False,
-            'message': 'Tourist not found'
-        }, status=404)
-
-    except SOSDevice.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'message': 'SOS device not found'
-        }, status=404)
-
-    except (KeyError, ValueError, TypeError, json.JSONDecodeError):
-        return JsonResponse({
-            'success': False,
-            'message': 'Invalid alert data'
+            'message': 'Invalid JSON format in request body'
         }, status=400)
+
+    if not isinstance(data, dict):
+        return JsonResponse({
+            'success': False,
+            'message': 'Request payload must be a JSON object'
+        }, status=400)
+
+    # 2. Extract and validate device_id
+    raw_device_id = data.get('device_id')
+    if not raw_device_id or not str(raw_device_id).strip():
+        return JsonResponse({
+            'success': False,
+            'message': "Missing required field: 'device_id'"
+        }, status=400)
+
+    device_id = str(raw_device_id).strip()
+
+    # 3. Extract and validate coordinates (optional, numeric if provided)
+    raw_lat = data.get('latitude')
+    raw_lng = data.get('longitude')
+    latitude = None
+    longitude = None
+
+    if raw_lat is not None and str(raw_lat).strip() != '':
+        try:
+            latitude = float(raw_lat)
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'message': "Invalid 'latitude' value. Must be a numeric coordinate."
+            }, status=400)
+
+    if raw_lng is not None and str(raw_lng).strip() != '':
+        try:
+            longitude = float(raw_lng)
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'success': False,
+                'message': "Invalid 'longitude' value. Must be a numeric coordinate."
+            }, status=400)
+
+    # 4. Find the registered SOSDevice using its actual device identifier (device_code)
+    device = SOSDevice.objects.filter(
+        Q(device_code=device_id) | Q(device_code__iexact=device_id)
+    ).first()
+
+    if not device:
+        return JsonResponse({
+            'success': False,
+            'message': f"SOS device with identifier '{device_id}' is not registered in the system"
+        }, status=404)
+
+    # 5. Retrieve the tourist assigned to that device through the existing device-to-tourist relationship
+    active_assignment = device.assignments.filter(
+        assignment_status='assigned'
+    ).select_related('tourist').order_by('-assigned_at').first()
+
+    if not active_assignment or not active_assignment.tourist:
+        return JsonResponse({
+            'success': False,
+            'message': f"Device '{device.device_code}' is registered but currently has no active tourist assignment"
+        }, status=400)
+
+    tourist = active_assignment.tourist
+
+    # 6. Update device last seen timestamp
+    device.last_seen_at = timezone.now()
+    device.save(update_fields=['last_seen_at'])
+
+    # 7. Create a TouristAlert record
+    alert = TouristAlert.objects.create(
+        tourist=tourist,
+        device=device,
+        latitude=latitude,
+        longitude=longitude,
+        status='pending'
+    )
+
+    # 8. Return response containing alert ID, device ID, tourist details, and status
+    return JsonResponse({
+        'success': True,
+        'message': 'SOS alert created successfully',
+        'alert_id': alert.id,
+        'device_id': device.device_code,
+        'tourist': {
+            'id': tourist.id,
+            'tourist_code': tourist.tourist_code,
+            'name': tourist.name,
+            'phone': tourist.phone,
+            'email': tourist.email,
+            'emergency_contact_name': tourist.emergency_contact_name,
+            'emergency_contact_phone': tourist.emergency_contact_phone,
+        },
+        'latitude': float(alert.latitude) if alert.latitude is not None else None,
+        'longitude': float(alert.longitude) if alert.longitude is not None else None,
+        'status': alert.status,
+        'created_at': alert.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+    }, status=201)
 
 def notifications(request):
     alerts = TouristAlert.objects.select_related(
