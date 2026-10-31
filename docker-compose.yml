@@ -44,6 +44,7 @@ services:
     env_file:
       - .env
     environment:
+      - IS_DOCKER=true
       - SECRET_KEY=${SECRET_KEY:-django-insecure-touristsos-docker-dev-key}
       - DEBUG=${DEBUG:-True}
       - DB_NAME=${DB_NAME:-touristsos_db}
