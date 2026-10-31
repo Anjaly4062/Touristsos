@@ -387,7 +387,7 @@ def create_tourist_alert(request):
     API endpoint for ESP32 and IoT devices to trigger an SOS alert.
     Expected payload from ESP32:
     {
-        "device_id": "SOS001",
+        "device_code": "SOS001",
         "latitude": 9.6312,
         "longitude": 76.5900,
         "message": "Emergency! Tourist needs help."
@@ -409,15 +409,15 @@ def create_tourist_alert(request):
                 'message': 'Request payload must be a JSON object'
             }, status=400)
 
-        # 2. Extract and validate device_id
-        raw_device_id = data.get('device_id')
-        if not raw_device_id or not str(raw_device_id).strip():
+        # 2. Extract and validate device_code (accepts 'device_code' or 'device_id')
+        raw_device_code = data.get('device_code') or data.get('device_id')
+        if not raw_device_code or not str(raw_device_code).strip():
             return JsonResponse({
                 'success': False,
-                'message': "Missing required field: 'device_id'"
+                'message': "Missing required field: 'device_code'"
             }, status=400)
 
-        device_id = str(raw_device_id).strip()
+        device_code = str(raw_device_code).strip()
 
         # 3. Extract and validate coordinates (optional, numeric if provided)
         raw_lat = data.get('latitude')
@@ -446,16 +446,16 @@ def create_tourist_alert(request):
         # Extract emergency message
         emergency_message = str(data.get('message', 'Emergency! Tourist needs help.')).strip()
 
-        # 4. Find the registered SOSDevice using its actual device identifier (device_code)
+        # 4. Find the registered SOSDevice using its actual device code
         device = SOSDevice.objects.filter(
-            Q(device_code=device_id) | Q(device_code__iexact=device_id)
+            Q(device_code=device_code) | Q(device_code__iexact=device_code)
         ).first()
 
         if not device:
-            logger.warning("SOS Alert attempt with unregistered device identifier: %s", device_id)
+            logger.warning("SOS Alert attempt with unregistered device code: %s", device_code)
             return JsonResponse({
                 'success': False,
-                'message': f"SOS device with identifier '{device_id}' is not registered in the system"
+                'message': f"SOS device with code '{device_code}' is not registered in the system"
             }, status=404)
 
         # 5. Retrieve the tourist assigned to that device through the existing device-to-tourist relationship
@@ -490,11 +490,12 @@ def create_tourist_alert(request):
             alert.id, device.device_code, tourist.name, tourist.tourist_code, emergency_message
         )
 
-        # 8. Return response containing alert ID, device ID, tourist details, and status
+        # 8. Return response containing alert ID, device code, tourist details, and status
         return JsonResponse({
             'success': True,
             'message': 'SOS alert created successfully',
             'alert_id': alert.id,
+            'device_code': device.device_code,
             'device_id': device.device_code,
             'tourist': {
                 'id': tourist.id,
