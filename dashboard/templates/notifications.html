@@ -629,6 +629,23 @@
       cursor: pointer;
     }
 
+    /* Active Alarm Silence Button */
+    .btn-silence {
+      background: #FEE2E2 !important;
+      color: #991B1B !important;
+      border-color: #FCA5A5 !important;
+      font-weight: 700;
+      animation: emergencyPulse 1.2s infinite;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    @keyframes emergencyPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+
     @media (max-width: 768px) {
       body {
         padding: 16px;
@@ -693,6 +710,11 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
           </span>
           <span id="soundText">Sound: ON</span>
+        </button>
+
+        <button type="button" class="btn-action btn-silence" id="btnSilenceAlarm" title="Silence active 30s emergency alarm" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width: 16px; height: 16px;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <span>Stop Alarm (<span id="alarmCountdown">30s</span>)</span>
         </button>
 
         <span class="audio-notice" id="audioNotice" title="Click anywhere to enable alert sound">
@@ -832,6 +854,8 @@
     const btnSound = document.getElementById('btnSound');
     const soundText = document.getElementById('soundText');
     const soundIcon = document.getElementById('soundIcon');
+    const btnSilenceAlarm = document.getElementById('btnSilenceAlarm');
+    const alarmCountdown = document.getElementById('alarmCountdown');
     const audioNotice = document.getElementById('audioNotice');
     const searchInput = document.getElementById('searchInput');
 
@@ -842,9 +866,13 @@
     const countResolved = document.getElementById('countResolved');
 
     // =========================================================================
-    // 2. SYNTHESIZED EMERGENCY CHIME (Web Audio API - Zero External Files)
+    // 2. SYNTHESIZED EMERGENCY ALARM (Loud 30-Second Alarm Engine)
     // =========================================================================
     let audioCtx = null;
+    let alarmIntervalId = null;
+    let alarmTimeoutId = null;
+    let alarmCountdownInterval = null;
+    let alarmEndTime = 0;
 
     function getAudioContext() {
       if (!audioCtx) {
@@ -859,42 +887,135 @@
       return audioCtx;
     }
 
-    // Play a distinct, professional 2-tone emergency alert chime
-    function playEmergencySound() {
+    // Play a single loud emergency dual-tone siren pulse
+    function playSingleAlarmPulse(ctx) {
       if (!soundEnabled) return;
 
       try {
-        const ctx = getAudioContext();
-        if (!ctx) return;
-
         const now = ctx.currentTime;
 
-        // Tone 1: 880 Hz (A5)
+        // Primary High-Impact Siren Sweep (Sawtooth wave for strong penetration)
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(880, now);
-        gain1.gain.setValueAtTime(0.2, now);
-        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-        osc1.connect(gain1);
-        gain1.connect(ctx.destination);
-        osc1.start(now);
-        osc1.stop(now + 0.18);
 
-        // Tone 2: 1320 Hz (E6) - higher urgent pitch
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(850, now);
+        osc1.frequency.linearRampToValueAtTime(1400, now + 0.32);
+        osc1.frequency.linearRampToValueAtTime(850, now + 0.62);
+
+        // Loud volume: 0.85
+        gain1.gain.setValueAtTime(0.85, now);
+        gain1.gain.setValueAtTime(0.85, now + 0.55);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.64);
+
+        // Secondary Harmonic Tone (Triangle wave for richness and body)
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
+
         osc2.type = 'triangle';
-        osc2.frequency.setValueAtTime(1320, now + 0.14);
-        gain2.gain.setValueAtTime(0.25, now + 0.14);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.start(now + 0.14);
-        osc2.stop(now + 0.42);
+        osc2.frequency.setValueAtTime(1200, now);
+        osc2.frequency.linearRampToValueAtTime(1750, now + 0.32);
+        osc2.frequency.linearRampToValueAtTime(1200, now + 0.62);
+
+        gain2.gain.setValueAtTime(0.65, now);
+        gain2.gain.setValueAtTime(0.65, now + 0.55);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.64);
+
+        // Low-pass filter to prevent harsh digital clipping while maintaining loudness
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2600, now);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain1);
+        gain1.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.65);
+        osc2.stop(now + 0.65);
       } catch (err) {
-        console.warn('Audio playback prevented by browser policy:', err);
+        console.warn('Audio playback error:', err);
       }
+    }
+
+    // Stop and silence the active alarm immediately
+    function stopEmergencyAlarm() {
+      if (alarmIntervalId) {
+        clearInterval(alarmIntervalId);
+        alarmIntervalId = null;
+      }
+      if (alarmTimeoutId) {
+        clearTimeout(alarmTimeoutId);
+        alarmTimeoutId = null;
+      }
+      if (alarmCountdownInterval) {
+        clearInterval(alarmCountdownInterval);
+        alarmCountdownInterval = null;
+      }
+      alarmEndTime = 0;
+
+      if (btnSilenceAlarm) {
+        btnSilenceAlarm.style.display = 'none';
+      }
+    }
+
+    // Start loud repeating 30-second emergency alarm
+    function startEmergencyAlarm(durationSeconds = 30) {
+      if (!soundEnabled) return;
+
+      const ctx = getAudioContext();
+      if (!ctx) return;
+
+      // Clear any currently active alarm before starting new one
+      stopEmergencyAlarm();
+
+      alarmEndTime = Date.now() + (durationSeconds * 1000);
+
+      // Show Stop Alarm button with live countdown
+      if (btnSilenceAlarm) {
+        btnSilenceAlarm.style.display = 'inline-flex';
+        if (alarmCountdown) {
+          alarmCountdown.textContent = `${durationSeconds}s`;
+        }
+      }
+
+      // Play first pulse immediately
+      playSingleAlarmPulse(ctx);
+
+      // Pulse every 720ms for the full 30 seconds
+      alarmIntervalId = setInterval(() => {
+        if (!soundEnabled || Date.now() >= alarmEndTime) {
+          stopEmergencyAlarm();
+          return;
+        }
+        playSingleAlarmPulse(ctx);
+      }, 720);
+
+      // Update countdown every second
+      alarmCountdownInterval = setInterval(() => {
+        const remainingMs = alarmEndTime - Date.now();
+        const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+        if (alarmCountdown) {
+          alarmCountdown.textContent = `${remainingSec}s`;
+        }
+        if (remainingSec <= 0) {
+          stopEmergencyAlarm();
+        }
+      }, 500);
+
+      // Hard cutoff at 30 seconds
+      alarmTimeoutId = setTimeout(() => {
+        stopEmergencyAlarm();
+      }, durationSeconds * 1000);
+    }
+
+    // Silence button click listener
+    if (btnSilenceAlarm) {
+      btnSilenceAlarm.addEventListener('click', () => {
+        stopEmergencyAlarm();
+      });
     }
 
     // Unlock browser audio upon first user gesture
@@ -916,9 +1037,11 @@
         btnSound.className = 'btn-action active-sound';
         soundText.textContent = 'Sound: ON';
         soundIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
-        // Brief preview chirp to confirm audio is active
-        playEmergencySound();
+        // Brief 1-second preview pulse to test loudness
+        const ctx = getAudioContext();
+        if (ctx) playSingleAlarmPulse(ctx);
       } else {
+        stopEmergencyAlarm();
         btnSound.className = 'btn-action muted-sound';
         soundText.textContent = 'Sound: MUTED';
         soundIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
@@ -1014,9 +1137,9 @@
         }
       });
 
-      // Play alert chime if new emergency alerts arrived
+      // Start loud 30-second emergency alarm if new emergency alerts arrived
       if (newlyDiscoveredIds.length > 0) {
-        playEmergencySound();
+        startEmergencyAlarm(30);
       }
 
       // Render the table
