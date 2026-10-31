@@ -1,0 +1,38 @@
+services:
+  # ============================================================================
+  # Tourist SOS Django Web Service (Docker Runtime on Render)
+  # ============================================================================
+  - type: web
+    name: touristsos
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    # Collect static files with WhiteNoise, run migrations, and start Gunicorn on Render's dynamic port
+    dockerCommand: >
+      sh -c "python manage.py collectstatic --noinput &&
+             python manage.py migrate &&
+             gunicorn sosapp.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      # Database connection variables (enter in Render Dashboard when prompted by Blueprint)
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # SSL settings for cloud database (e.g., Aiven MySQL)
+      - key: DB_SSL
+        value: "true"
+      - key: DB_SSL_CA
+        value: "/etc/secrets/ca.pem"
