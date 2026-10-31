@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SOS Notifications</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            padding: 25px;
+        }
+
+        h2 {
+            color: #0e7490;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #0e7490;
+            color: white;
+        }
+
+        .pending {
+            color: red;
+            font-weight: bold;
+        }
+
+        .acknowledged {
+            color: #d97706;
+            font-weight: bold;
+        }
+
+        .resolved {
+            color: green;
+            font-weight: bold;
+        }
+
+        a {
+            color: #0e7490;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>SOS Notifications</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Alert ID</th>
+                <th>Tourist</th>
+                <th>Device ID</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for alert in alerts %}
+            <tr>
+                <td>{{ alert.id }}</td>
+                <td>{{ alert.tourist.name }}</td>
+                <td>{{ alert.device.id }}</td>
+                <td>{{ alert.latitude|default:"N/A" }}</td>
+                <td>{{ alert.longitude|default:"N/A" }}</td>
+                <td>{{ alert.created_at|date:"d-m-Y" }}</td>
+                <td>{{ alert.created_at|time:"h:i:s A" }}</td>
+                <td class="{{ alert.status }}">
+                    {{ alert.get_status_display }}
+                </td>
+            </tr>
+
+            {% empty %}
+            <tr>
+                <td colspan="8">No SOS notifications found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

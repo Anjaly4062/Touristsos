@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+venv/
+.venv/
+
+# Django
+staticfiles/
+media/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Certificates and secrets
+*.pem
+ca.pem
+ca .pem
+ca*.pem

@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  <!-- Device Availability Banner if none available -->
+  {% if available_devices_count == 0 %}
+  <div class="alert alert-warning" style="margin-bottom: 20px;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <div>
+      <strong>Notice: No Active Wristbands Currently Available!</strong>
+      <p style="margin-top: 4px; font-size: 0.82rem;">
+        All active devices are currently deployed to tourists or under maintenance. You can 
+        <a href="{% url 'device_register' %}" style="text-decoration: underline; font-weight: 600;">register a new device</a> 
+        or go to <a href="{% url 'assignment_history' %}" style="text-decoration: underline; font-weight: 600;">Assignment History</a> to process device returns.
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="8.5" cy="7" r="4"/>
+            <line x1="20" y1="8" x2="20" y2="14"/>
+            <line x1="23" y1="11" x2="17" y2="11"/>
+          </svg>
+          Tourist Registration & SOS Wristband Assignment
+        </h3>
+        <p class="card-description">
+          Register a tourist and assign an active SOS safety wristband in a single unified operation.
+        </p>
+      </div>
+      <span class="badge badge-active">{{ available_devices_count }} Devices Available</span>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="card-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+          <div>
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Part 1: Tourist Personal & Contact Details -->
+        <div class="form-section-header">
+          <div class="section-step">1</div>
+          <div>
+            <h4>Tourist Information</h4>
+            <p>Personal profile, emergency contacts, and contact information</p>
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          <!-- Tourist Code -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.tourist_code.id_for_label }}">
+              Tourist Code <span class="required">*</span>
+            </label>
+            {{ form.tourist_code }}
+            {% if form.tourist_code.errors %}
+              <div class="form-error">{{ form.tourist_code.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Unique code, e.g., TR-2026-001</div>
+            {% endif %}
+          </div>
+
+          <!-- Full Name -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.name.id_for_label }}">
+              Full Name <span class="required">*</span>
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <div class="form-error">{{ form.name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Phone Number -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.phone.id_for_label }}">
+              Phone Number <span class="required">*</span>
+            </label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <div class="form-error">{{ form.phone.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.email.id_for_label }}">
+              Email Address
+            </label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="form-error">{{ form.email.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Gender -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.gender.id_for_label }}">
+              Gender
+            </label>
+            {{ form.gender }}
+            {% if form.gender.errors %}
+              <div class="form-error">{{ form.gender.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Date of Birth -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">
+              Date of Birth
+            </label>
+            {{ form.date_of_birth }}
+            {% if form.date_of_birth.errors %}
+              <div class="form-error">{{ form.date_of_birth.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <!-- Emergency Contact Name -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.emergency_contact_name.id_for_label }}">
+              Emergency Contact Name <span class="required">*</span>
+            </label>
+            {{ form.emergency_contact_name }}
+            {% if form.emergency_contact_name.errors %}
+              <div class="form-error">{{ form.emergency_contact_name.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Guide, relative, or accompanying guardian</div>
+            {% endif %}
+          </div>
+
+          <!-- Emergency Contact Phone -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.emergency_contact_phone.id_for_label }}">
+              Emergency Contact Phone <span class="required">*</span>
+            </label>
+            {{ form.emergency_contact_phone }}
+            {% if form.emergency_contact_phone.errors %}
+              <div class="form-error">{{ form.emergency_contact_phone.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Direct 24/7 emergency contact number</div>
+            {% endif %}
+          </div>
+
+          <!-- Tourist Status -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.tourist_status.id_for_label }}">
+              Tourist Status <span class="required">*</span>
+            </label>
+            {{ form.tourist_status }}
+            {% if form.tourist_status.errors %}
+              <div class="form-error">{{ form.tourist_status.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Address / Hotel -->
+          <div class="form-group full-width">
+            <label class="form-label" for="{{ form.address.id_for_label }}">
+              Address / Local Accommodation <span class="required">*</span>
+            </label>
+            {{ form.address }}
+            {% if form.address.errors %}
+              <div class="form-error">{{ form.address.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Hotel name, room number, or current residential location</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Part 2: SOS Wristband Device Selection & Assignment Details -->
+        <div class="form-section-header" style="margin-top: 14px;">
+          <div class="section-step">2</div>
+          <div>
+            <h4>SOS Wristband & Assignment Schedule</h4>
+            <p>Select an available active device and specify expected return schedule</p>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <!-- Device Selection -->
+          <div class="form-group full-width">
+            <label class="form-label" for="{{ form.device.id_for_label }}">
+              Select Available SOS Wristband <span class="required">*</span>
+            </label>
+            {{ form.device }}
+            {% if form.device.errors %}
+              <div class="form-error">{{ form.device.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Only active and unassigned devices are eligible. Re-validated on submission.</div>
+            {% endif %}
+          </div>
+
+          <!-- Assignment Code -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.assignment_code.id_for_label }}">
+              Assignment Code <span class="required">*</span>
+            </label>
+            {{ form.assignment_code }}
+            {% if form.assignment_code.errors %}
+              <div class="form-error">{{ form.assignment_code.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Unique tracking identifier, e.g., ASG-2026-001</div>
+            {% endif %}
+          </div>
+
+          <!-- Expected Return Time -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.expected_return_at.id_for_label }}">
+              Expected Return Date & Time
+            </label>
+            {{ form.expected_return_at }}
+            {% if form.expected_return_at.errors %}
+              <div class="form-error">{{ form.expected_return_at.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Initial assignment status will be set to 'Assigned'</div>
+            {% endif %}
+          </div>
+
+          <!-- Assignment Notes -->
+          <div class="form-group full-width">
+            <label class="form-label" for="{{ form.notes.id_for_label }}">
+              Assignment Notes / Trip Details
+            </label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+              <div class="form-error">{{ form.notes.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer" style="justify-content: space-between;">
+        <span style="font-size: 0.78rem; color: var(--text-muted);">
+          Tourist profile and device assignment are saved together in an atomic transaction.
+        </span>
+        <div style="display: flex; gap: 10px;">
+          <a href="{% url 'dashboard_home' %}" class="btn btn-outline">Cancel</a>
+          <button type="submit" class="btn btn-primary" {% if available_devices_count == 0 %}disabled{% endif %}>
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Complete Assignment & Deploy Wristband
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

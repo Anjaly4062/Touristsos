@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Summary Metric Cards -->
+<div class="metrics-grid">
+  <!-- Card 1: Total Tourists -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <h3>Registered Tourists</h3>
+      <div class="metric-value">{{ total_tourists }}</div>
+      <div class="metric-subtitle">Total tourist profiles</div>
+    </div>
+    <div class="metric-icon-box">
+      <svg viewBox="0 0 24 24">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Card 2: Total SOS Devices -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <h3>Total Devices</h3>
+      <div class="metric-value">{{ total_devices }}</div>
+      <div class="metric-subtitle">SOS wristbands registered</div>
+    </div>
+    <div class="metric-icon-box">
+      <svg viewBox="0 0 24 24">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Card 3: Available Devices -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <h3>Available Devices</h3>
+      <div class="metric-value" style="color: var(--status-active-color);">{{ available_devices }}</div>
+      <div class="metric-subtitle">Ready for tourist assignment</div>
+    </div>
+    <div class="metric-icon-box" style="background-color: var(--status-active-bg);">
+      <svg viewBox="0 0 24 24" style="stroke: var(--status-active-color);">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Card 4: Active Assignments -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <h3>Active Assignments</h3>
+      <div class="metric-value" style="color: var(--status-assigned-color);">{{ active_assignments }}</div>
+      <div class="metric-subtitle">Currently deployed in field</div>
+    </div>
+    <div class="metric-icon-box" style="background-color: var(--status-assigned-bg);">
+      <svg viewBox="0 0 24 24" style="stroke: var(--status-assigned-color);">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Two Column Grid -->
+<div class="dashboard-grid">
+  <!-- Left Column: Recent Assignments Table -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Recent Assignment Activity
+        </h3>
+        <p class="card-description">Latest wristbands deployed to tourists</p>
+      </div>
+      <a href="{% url 'assignment_history' %}" class="btn btn-outline btn-sm">View All History</a>
+    </div>
+
+    <div class="table-responsive">
+      {% if recent_assignments %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Assignment Code</th>
+            <th>Tourist</th>
+            <th>Device</th>
+            <th>Assigned Date</th>
+            <th>Expected Return</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asg in recent_assignments %}
+          <tr>
+            <td>
+              <strong>{{ asg.assignment_code }}</strong>
+            </td>
+            <td>
+              <div><strong>{{ asg.tourist.name }}</strong></div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">{{ asg.tourist.tourist_code }}</span>
+            </td>
+            <td>
+              <a href="{% url 'device_detail' asg.device.pk %}">
+                <strong>{{ asg.device.device_code }}</strong>
+              </a>
+            </td>
+            <td>{{ asg.assigned_at|date:"M d, Y H:i" }}</td>
+            <td>
+              {% if asg.expected_return_at %}
+                {{ asg.expected_return_at|date:"M d, Y H:i" }}
+              {% else %}
+                <span style="color: var(--text-muted);">Not specified</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if asg.assignment_status == 'assigned' %}
+                <span class="badge badge-assigned"><span class="badge-dot"></span>Active</span>
+              {% elif asg.assignment_status == 'returned' %}
+                <span class="badge badge-returned"><span class="badge-dot"></span>Returned</span>
+              {% elif asg.assignment_status == 'lost' %}
+                <span class="badge badge-lost"><span class="badge-dot"></span>Lost</span>
+              {% else %}
+                <span class="badge badge-inactive">{{ asg.get_assignment_status_display }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if asg.assignment_status == 'assigned' %}
+              <form action="{% url 'device_return' asg.pk %}" method="post" style="display:inline;" onsubmit="return confirm('Confirm device return for tourist {{ asg.tourist.name|escapejs }}?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm" title="Mark Device Returned">
+                  Return
+                </button>
+              </form>
+              {% else %}
+              <span style="color: var(--text-muted); font-size: 0.78rem;">Completed</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h4>No Assignments Recorded Yet</h4>
+        <p>No wristbands have been assigned yet. Register a device and assign it to a tourist to get started.</p>
+        <a href="{% url 'assign_device' %}" class="btn btn-primary btn-sm">Assign First Device</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Column: Wristband Inventory & Available Quick View -->
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    <!-- Inventory Status Summary Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+          </svg>
+          Device Inventory Status
+        </h3>
+      </div>
+      <div class="card-body">
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge badge-active"><span class="badge-dot"></span>Active</span>
+            </span>
+            <strong>{{ device_status_counts.active }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge badge-maintenance"><span class="badge-dot"></span>Maintenance</span>
+            </span>
+            <strong>{{ device_status_counts.maintenance }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge badge-inactive"><span class="badge-dot"></span>Inactive</span>
+            </span>
+            <strong>{{ device_status_counts.inactive }}</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge badge-lost"><span class="badge-dot"></span>Lost</span>
+            </span>
+            <strong>{{ device_status_counts.lost }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer" style="justify-content: space-between;">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">{{ total_devices }} Devices Total</span>
+        <a href="{% url 'device_list' %}" class="btn btn-outline btn-sm">Manage Devices</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

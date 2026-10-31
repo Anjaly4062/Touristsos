@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; gap: 24px;">
+  <!-- Device Overview Card -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h3 class="card-title" style="font-size: 1.15rem;">
+            {{ device.device_code }} — {{ device.device_name }}
+          </h3>
+          {% if device.status == 'active' %}
+            <span class="badge badge-active"><span class="badge-dot"></span>Active</span>
+          {% elif device.status == 'maintenance' %}
+            <span class="badge badge-maintenance"><span class="badge-dot"></span>Maintenance</span>
+          {% elif device.status == 'lost' %}
+            <span class="badge badge-lost"><span class="badge-dot"></span>Lost</span>
+          {% else %}
+            <span class="badge badge-inactive"><span class="badge-dot"></span>Inactive</span>
+          {% endif %}
+
+          {% if is_available %}
+            <span class="badge badge-active" style="background-color: var(--status-active-bg); color: var(--status-active-color);">
+              Available for Assignment
+            </span>
+          {% elif active_assignment %}
+            <span class="badge badge-assigned">
+              Currently Assigned
+            </span>
+          {% endif %}
+        </div>
+        <p class="card-description">Device specifications, battery health, and hardware audit</p>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <a href="{% url 'device_edit' device.pk %}" class="btn btn-secondary btn-sm">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Edit Device
+        </a>
+        <a href="{% url 'device_list' %}" class="btn btn-outline btn-sm">
+          Back to List
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <!-- Active Assignment Alert Banner if currently deployed -->
+      {% if active_assignment %}
+      <div class="alert alert-warning" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <div>
+            <strong>Currently Deployed in Field:</strong> Assigned to <strong>{{ active_assignment.tourist.name }}</strong> (Code: {{ active_assignment.tourist.tourist_code }}).
+            <div style="font-size: 0.78rem; opacity: 0.9;">
+              Assigned: {{ active_assignment.assigned_at|date:"M d, Y H:i" }} | Expected Return: {{ active_assignment.expected_return_at|date:"M d, Y H:i"|default:"Not specified" }}
+            </div>
+          </div>
+        </div>
+
+        <form action="{% url 'device_return' active_assignment.pk %}" method="post" style="display:inline;" onsubmit="return confirm('Process return of wristband {{ device.device_code|escapejs }}?');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary btn-sm">
+            Process Device Return
+          </button>
+        </form>
+      </div>
+      {% endif %}
+
+      <!-- Specifications Grid -->
+      <div class="details-list">
+        <div class="detail-item">
+          <div class="detail-label">Device Code</div>
+          <div class="detail-value">{{ device.device_code }}</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">Hardware Serial Number</div>
+          <div class="detail-value"><code>{{ device.serial_number }}</code></div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">Device Name</div>
+          <div class="detail-value">{{ device.device_name }}</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">Device Type</div>
+          <div class="detail-value">{{ device.device_type }}</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">Battery Capacity</div>
+          <div class="detail-value">
+            {% if device.battery_capacity %}
+              {{ device.battery_capacity }} mAh
+            {% else %}
+              <span style="color: var(--text-muted);">Not specified</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">Purchase Date</div>
+          <div class="detail-value">{{ device.purchase_date|date:"F d, Y"|default:"—" }}</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">Last Seen / Telemetry</div>
+          <div class="detail-value">{{ device.last_seen_at|date:"M d, Y H:i"|default:"—" }}</div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label">Registered in System</div>
+          <div class="detail-value">{{ device.created_at|date:"M d, Y H:i" }}</div>
+        </div>
+
+        <div class="detail-item" style="grid-column: 1 / -1;">
+          <div class="detail-label">Remarks & Notes</div>
+          <div class="detail-value">{{ device.remarks|linebreaks|default:"No notes or remarks recorded for this device." }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer" style="justify-content: space-between;">
+      <div>
+        {% if can_delete %}
+        <form action="{% url 'device_delete' device.pk %}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete device {{ device.device_code|escapejs }}?');">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline btn-sm" style="color: #DC2626; border-color: #FECACA;">
+            Delete Device
+          </button>
+        </form>
+        {% else %}
+        <span style="font-size: 0.78rem; color: var(--text-muted);">
+          Protected: Device has assignment history and cannot be deleted.
+        </span>
+        {% endif %}
+      </div>
+      <div>
+        {% if is_available %}
+        <a href="{% url 'assign_device' %}" class="btn btn-primary btn-sm">
+          + Assign to Tourist
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Assignment History Table -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Assignment History for {{ device.device_code }}
+        </h3>
+        <p class="card-description">Complete log of tourists who have used this SOS wristband</p>
+      </div>
+      <span class="badge badge-returned">{{ assignments.count }} Historical Records</span>
+    </div>
+
+    <div class="table-responsive">
+      {% if assignments %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Assignment Code</th>
+            <th>Tourist Name</th>
+            <th>Tourist Code</th>
+            <th>Assigned Date</th>
+            <th>Expected Return</th>
+            <th>Actual Return Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asg in assignments %}
+          <tr>
+            <td><strong>{{ asg.assignment_code }}</strong></td>
+            <td><strong>{{ asg.tourist.name }}</strong></td>
+            <td>{{ asg.tourist.tourist_code }}</td>
+            <td>{{ asg.assigned_at|date:"M d, Y H:i" }}</td>
+            <td>{{ asg.expected_return_at|date:"M d, Y H:i"|default:"—" }}</td>
+            <td>{{ asg.returned_at|date:"M d, Y H:i"|default:"—" }}</td>
+            <td>
+              {% if asg.assignment_status == 'assigned' %}
+                <span class="badge badge-assigned"><span class="badge-dot"></span>Active</span>
+              {% elif asg.assignment_status == 'returned' %}
+                <span class="badge badge-returned"><span class="badge-dot"></span>Returned</span>
+              {% elif asg.assignment_status == 'lost' %}
+                <span class="badge badge-lost"><span class="badge-dot"></span>Lost</span>
+              {% else %}
+                <span class="badge badge-inactive">{{ asg.get_assignment_status_display }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if asg.assignment_status == 'assigned' %}
+              <form action="{% url 'device_return' asg.pk %}" method="post" style="display:inline;" onsubmit="return confirm('Confirm device return?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary btn-sm">
+                  Return
+                </button>
+              </form>
+              {% else %}
+              <span style="font-size: 0.78rem; color: var(--text-muted);">Completed</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h4>No Assignment History</h4>
+        <p>This wristband has never been assigned to any tourist yet.</p>
+        {% if is_available %}
+        <a href="{% url 'assign_device' %}" class="btn btn-primary btn-sm">Assign Wristband Now</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

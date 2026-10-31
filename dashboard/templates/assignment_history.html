@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        SOS Wristband Assignment History & Returns
+      </h3>
+      <p class="card-description">
+        Comprehensive log of all device assignments, live deployments, and return audit trails
+      </p>
+    </div>
+    <a href="{% url 'assign_device' %}" class="btn btn-primary btn-sm">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      + New Assignment
+    </a>
+  </div>
+
+  <div class="card-body">
+    <!-- Filter Tabs -->
+    <div class="tabs-nav">
+      <a href="{% url 'assignment_history' %}?status=all{% if search_query %}&q={{ search_query }}{% endif %}" class="tab-item {% if status_filter == 'all' or not status_filter %}active{% endif %}">
+        All Assignments
+        <span class="tab-badge">{{ all_count }}</span>
+      </a>
+      <a href="{% url 'assignment_history' %}?status=assigned{% if search_query %}&q={{ search_query }}{% endif %}" class="tab-item {% if status_filter == 'assigned' %}active{% endif %}">
+        Active Deployed
+        <span class="tab-badge" style="background-color: var(--status-assigned-bg); color: var(--status-assigned-color);">{{ assigned_count }}</span>
+      </a>
+      <a href="{% url 'assignment_history' %}?status=returned{% if search_query %}&q={{ search_query }}{% endif %}" class="tab-item {% if status_filter == 'returned' %}active{% endif %}">
+        Returned & Completed
+        <span class="tab-badge" style="background-color: var(--status-active-bg); color: var(--status-active-color);">{{ returned_count }}</span>
+      </a>
+    </div>
+
+    <!-- Search Bar -->
+    <form method="get" class="filter-bar">
+      <input type="hidden" name="status" value="{{ status_filter }}">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by assignment code, tourist, or device...">
+      </div>
+      <div>
+        <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+        {% if search_query %}
+        <a href="{% url 'assignment_history' %}?status={{ status_filter }}" class="btn btn-outline btn-sm">Clear</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <!-- Assignments Table -->
+    <div class="table-responsive">
+      {% if assignments %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Assignment Code</th>
+            <th>Tourist Profile</th>
+            <th>Wristband Device</th>
+            <th>Assigned Date</th>
+            <th>Expected Return</th>
+            <th>Actual Return</th>
+            <th>Status</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asg in assignments %}
+          <tr>
+            <td>
+              <strong>{{ asg.assignment_code }}</strong>
+              {% if asg.notes %}
+              <div style="font-size: 0.72rem; color: var(--text-muted);" title="{{ asg.notes }}">
+                Note: {{ asg.notes|truncatechars:28 }}
+              </div>
+              {% endif %}
+            </td>
+            <td>
+              <div><strong>{{ asg.tourist.name }}</strong></div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 8px;">
+                <span>ID: {{ asg.tourist.tourist_code }}</span>
+                <span>•</span>
+                <span>Tel: {{ asg.tourist.phone }}</span>
+              </div>
+            </td>
+            <td>
+              <a href="{% url 'device_detail' asg.device.pk %}">
+                <strong>{{ asg.device.device_code }}</strong>
+              </a>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">
+                S/N: {{ asg.device.serial_number }}
+              </div>
+            </td>
+            <td>{{ asg.assigned_at|date:"M d, Y H:i" }}</td>
+            <td>
+              {% if asg.expected_return_at %}
+                {{ asg.expected_return_at|date:"M d, Y H:i" }}
+              {% else %}
+                <span style="color: var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if asg.returned_at %}
+                <span style="color: var(--status-active-color); font-weight: 500;">
+                  {{ asg.returned_at|date:"M d, Y H:i" }}
+                </span>
+              {% else %}
+                <span style="color: var(--text-muted); font-size: 0.8rem;">In Use</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if asg.assignment_status == 'assigned' %}
+                <span class="badge badge-assigned"><span class="badge-dot"></span>Active</span>
+              {% elif asg.assignment_status == 'returned' %}
+                <span class="badge badge-returned"><span class="badge-dot"></span>Returned</span>
+              {% elif asg.assignment_status == 'lost' %}
+                <span class="badge badge-lost"><span class="badge-dot"></span>Lost</span>
+              {% elif asg.assignment_status == 'cancelled' %}
+                <span class="badge badge-inactive">Cancelled</span>
+              {% else %}
+                <span class="badge badge-inactive">{{ asg.get_assignment_status_display }}</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              {% if asg.assignment_status == 'assigned' %}
+              <form action="{% url 'device_return' asg.pk %}" method="post" style="display:inline;" onsubmit="return confirm('Process return of wristband {{ asg.device.device_code|escapejs }} from tourist {{ asg.tourist.name|escapejs }}?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm" title="Mark Device as Returned">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  Return Device
+                </button>
+              </form>
+              {% else %}
+              <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">
+                Archived
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h4>No Assignment Records Found</h4>
+        <p>
+          {% if search_query or status_filter != 'all' %}
+          No assignment records match your filter criteria. Try clearing search filters.
+          {% else %}
+          No wristband assignments have been created yet. Assign an active wristband to a tourist.
+          {% endif %}
+        </p>
+        <a href="{% url 'assign_device' %}" class="btn btn-primary btn-sm">+ Assign Wristband</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card-footer" style="justify-content: space-between;">
+    <span style="font-size: 0.8rem; color: var(--text-muted);">
+      Showing {{ assignments.count }} assignment record(s)
+    </span>
+    <span style="font-size: 0.75rem; color: var(--text-muted);">
+      Historical records are permanently preserved upon device return for safety audits.
+    </span>
+  </div>
+</div>
+{% endblock %}

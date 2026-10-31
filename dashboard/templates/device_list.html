@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        SOS Wristband Device Inventory
+      </h3>
+      <p class="card-description">Track hardware status, current tourist assignments, and device specifications</p>
+    </div>
+    <a href="{% url 'device_register' %}" class="btn btn-primary btn-sm">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      + Register New Device
+    </a>
+  </div>
+
+  <div class="card-body">
+    <!-- Filter and Search Bar -->
+    <form method="get" class="filter-bar">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by device code, serial, or name...">
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <select name="status" class="form-select" style="min-width: 170px;" onchange="this.form.submit()">
+          <option value="">All Operational Statuses</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+          <option value="maintenance" {% if status_filter == 'maintenance' %}selected{% endif %}>Maintenance</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+          <option value="lost" {% if status_filter == 'lost' %}selected{% endif %}>Lost</option>
+        </select>
+
+        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+        {% if search_query or status_filter %}
+        <a href="{% url 'device_list' %}" class="btn btn-outline btn-sm">Reset</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <!-- Devices Table -->
+    <div class="table-responsive">
+      {% if device_data %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Device Code</th>
+            <th>Name & Type</th>
+            <th>Serial Number</th>
+            <th>Battery</th>
+            <th>Device Status</th>
+            <th>Assignment Status</th>
+            <th>Last Seen</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in device_data %}
+          {% with dev=item.device asg=item.active_assignment is_avail=item.is_available can_del=item.can_delete %}
+          <tr>
+            <td>
+              <a href="{% url 'device_detail' dev.pk %}">
+                <strong>{{ dev.device_code }}</strong>
+              </a>
+            </td>
+            <td>
+              <div><strong>{{ dev.device_name }}</strong></div>
+              <span style="font-size: 0.72rem; color: var(--text-muted);">{{ dev.device_type }}</span>
+            </td>
+            <td>
+              <code style="background-color: var(--accent-fill); color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">
+                {{ dev.serial_number }}
+              </code>
+            </td>
+            <td>
+              {% if dev.battery_capacity %}
+              <div class="battery-indicator">
+                <div class="battery-bar-bg">
+                  <div class="battery-bar-fill {% if dev.battery_capacity < 200 %}low{% elif dev.battery_capacity < 400 %}mid{% endif %}" style="width: {% if dev.battery_capacity > 600 %}100%{% else %}{{ dev.battery_capacity|floatformat:0 }}%{% endif %};"></div>
+                </div>
+                <span>{{ dev.battery_capacity }} mAh</span>
+              </div>
+              {% else %}
+              <span style="color: var(--text-muted);">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if dev.status == 'active' %}
+                <span class="badge badge-active"><span class="badge-dot"></span>Active</span>
+              {% elif dev.status == 'maintenance' %}
+                <span class="badge badge-maintenance"><span class="badge-dot"></span>Maintenance</span>
+              {% elif dev.status == 'lost' %}
+                <span class="badge badge-lost"><span class="badge-dot"></span>Lost</span>
+              {% else %}
+                <span class="badge badge-inactive"><span class="badge-dot"></span>Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if is_avail %}
+                <span class="badge badge-active" style="background-color: var(--status-active-bg); color: var(--status-active-color);">
+                  Ready to Deploy
+                </span>
+              {% elif asg %}
+                <span class="badge badge-assigned" title="Assigned to {{ asg.tourist.name }}">
+                  Assigned ({{ asg.tourist.tourist_code }})
+                </span>
+              {% else %}
+                <span class="badge badge-inactive">Unavailable</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if dev.last_seen_at %}
+                <span style="font-size: 0.8rem;">{{ dev.last_seen_at|date:"M d, Y H:i" }}</span>
+              {% else %}
+                <span style="color: var(--text-muted); font-size: 0.8rem;">—</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <a href="{% url 'device_detail' dev.pk %}" class="btn btn-outline btn-sm" title="View Specifications & History">
+                View
+              </a>
+              <a href="{% url 'device_edit' dev.pk %}" class="btn btn-secondary btn-sm" title="Edit Device">
+                Edit
+              </a>
+              {% if can_del %}
+              <form action="{% url 'device_delete' dev.pk %}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete device {{ dev.device_code|escapejs }}? This action cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline btn-sm" style="color: #DC2626; border-color: #FECACA;" title="Delete Device">
+                  Delete
+                </button>
+              </form>
+              {% else %}
+              <button class="btn btn-outline btn-sm disabled" title="Cannot delete: assignment history exists (protected)" disabled style="opacity: 0.4;">
+                Delete
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% endwith %}
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <h4>No Devices Found</h4>
+        <p>
+          {% if search_query or status_filter %}
+          No devices match your search or filter criteria. Try resetting filters.
+          {% else %}
+          No SOS wristband devices have been registered yet. Add your first wristband device.
+          {% endif %}
+        </p>
+        <a href="{% url 'device_register' %}" class="btn btn-primary btn-sm">+ Register New Wristband</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card-footer" style="justify-content: space-between;">
+    <span style="font-size: 0.8rem; color: var(--text-muted);">
+      Showing {{ device_data|length }} of {{ total_count }} registered devices
+    </span>
+    <span style="font-size: 0.75rem; color: var(--text-muted);">
+      Devices with assignment history are protected from deletion.
+    </span>
+  </div>
+</div>
+{% endblock %}

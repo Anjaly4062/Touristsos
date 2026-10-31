@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          {% if is_edit %}Edit SOS Wristband Device: {{ device.device_code }}{% else %}Register New SOS Wristband{% endif %}
+        </h3>
+        <p class="card-description">
+          {% if is_edit %}Update device details, status, battery, or hardware notes.{% else %}Add a new SOS wristband to the deployment inventory.{% endif %}
+        </p>
+      </div>
+      <a href="{% url 'device_list' %}" class="btn btn-outline btn-sm">
+        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to Devices
+      </a>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="card-body">
+        {% if form.non_field_errors %}
+        <div class="alert alert-error">
+          <div>
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Section 1: Device Identification -->
+        <div class="form-section-header">
+          <div class="section-step">1</div>
+          <div>
+            <h4>Device Identification</h4>
+            <p>Unique codes and hardware serial details</p>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <!-- Device Code -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.device_code.id_for_label }}">
+              Device Code <span class="required">*</span>
+            </label>
+            {{ form.device_code }}
+            {% if form.device_code.errors %}
+              <div class="form-error">{{ form.device_code.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Unique tracking tag, e.g., SOS-WRIST-001</div>
+            {% endif %}
+          </div>
+
+          <!-- Serial Number -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.serial_number.id_for_label }}">
+              Hardware Serial Number <span class="required">*</span>
+            </label>
+            {{ form.serial_number }}
+            {% if form.serial_number.errors %}
+              <div class="form-error">{{ form.serial_number.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Unique manufacturer serial number</div>
+            {% endif %}
+          </div>
+
+          <!-- Device Name -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.device_name.id_for_label }}">
+              Device Name <span class="required">*</span>
+            </label>
+            {{ form.device_name }}
+            {% if form.device_name.errors %}
+              <div class="form-error">{{ form.device_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Device Type -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.device_type.id_for_label }}">
+              Device Type <span class="required">*</span>
+            </label>
+            {{ form.device_type }}
+            {% if form.device_type.errors %}
+              <div class="form-error">{{ form.device_type.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Section 2: Technical & Operational Specs -->
+        <div class="form-section-header" style="margin-top: 10px;">
+          <div class="section-step">2</div>
+          <div>
+            <h4>Specifications & Status</h4>
+            <p>Battery capacity, operational status, and hardware history</p>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <!-- Device Status -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.status.id_for_label }}">
+              Operational Status <span class="required">*</span>
+            </label>
+            {{ form.status }}
+            {% if form.status.errors %}
+              <div class="form-error">{{ form.status.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Only 'Active' wristbands can be assigned to tourists</div>
+            {% endif %}
+          </div>
+
+          <!-- Battery Capacity -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.battery_capacity.id_for_label }}">
+              Battery Capacity (mAh)
+            </label>
+            {{ form.battery_capacity }}
+            {% if form.battery_capacity.errors %}
+              <div class="form-error">{{ form.battery_capacity.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Total battery rating in milliampere-hours</div>
+            {% endif %}
+          </div>
+
+          <!-- Purchase Date -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.purchase_date.id_for_label }}">
+              Purchase Date
+            </label>
+            {{ form.purchase_date }}
+            {% if form.purchase_date.errors %}
+              <div class="form-error">{{ form.purchase_date.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Last Seen At -->
+          <div class="form-group">
+            <label class="form-label" for="{{ form.last_seen_at.id_for_label }}">
+              Last Seen Date & Time
+            </label>
+            {{ form.last_seen_at }}
+            {% if form.last_seen_at.errors %}
+              <div class="form-error">{{ form.last_seen_at.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Last telemetry ping or inspection timestamp</div>
+            {% endif %}
+          </div>
+
+          <!-- Remarks -->
+          <div class="form-group full-width">
+            <label class="form-label" for="{{ form.remarks.id_for_label }}">
+              Hardware Remarks & Maintenance Notes
+            </label>
+            {{ form.remarks }}
+            {% if form.remarks.errors %}
+              <div class="form-error">{{ form.remarks.errors.0 }}</div>
+            {% else %}
+              <div class="form-text">Add any condition reports, sensor calibrations, or accessories included</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <a href="{% url 'device_list' %}" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          {% if is_edit %}Save Changes{% else %}Register Device{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
