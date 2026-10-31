@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Tourist, SOSDevice, DeviceAssignment
+from .models import Tourist, SOSDevice, DeviceAssignment, TouristAlert
 
 
 @admin.register(Tourist)
@@ -24,3 +24,11 @@ class DeviceAssignmentAdmin(admin.ModelAdmin):
     search_fields = ('assignment_code', 'tourist__name', 'tourist__tourist_code', 'device__device_code', 'device__serial_number')
     list_filter = ('assignment_status', 'assigned_at')
     ordering = ('-assigned_at',)
+
+
+@admin.register(TouristAlert)
+class TouristAlertAdmin(admin.ModelAdmin):
+    list_display = ('id', 'tourist', 'device', 'latitude', 'longitude', 'status', 'created_at')
+    search_fields = ('tourist__name', 'tourist__tourist_code', 'device__device_code')
+    list_filter = ('status', 'created_at')
+    ordering = ('-created_at',)

@@ -21,6 +21,7 @@ from dashboard import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('dashboard.urls')),
-    path('api/alerts/create/',views.create_tourist_alert,name='create_tourist_alert'),
+    path('api/alerts/create/', views.create_tourist_alert, name='create_tourist_alert'),
+    path('api/notifications/', views.get_notifications_api, name='get_notifications_api'),
     path('notifications/', views.notifications, name='notifications'),
 ]

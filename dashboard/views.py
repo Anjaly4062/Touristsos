@@ -374,7 +374,7 @@ import json
 import logging
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from .models import TouristAlert, Tourist, SOSDevice
 
 logger = logging.getLogger(__name__)
@@ -521,12 +521,73 @@ def create_tourist_alert(request):
         }, status=500)
 
 def notifications(request):
-    alerts = TouristAlert.objects.select_related(
-        'tourist', 'device'
-    ).all()
+    """
+    Renders the dynamic SOS Notifications Dashboard page.
+    Notification records are fetched asynchronously via JavaScript from /api/notifications/.
+    """
+    return render(request, 'notifications.html')
 
-    return render(
-        request,
-        'notifications.html',
-        {'alerts': alerts}
-    )
+
+@require_GET
+def get_notifications_api(request):
+    """
+    API endpoint for retrieving all SOS notifications as JSON.
+    Used by the notifications dashboard for real-time polling every 5 seconds.
+    """
+    try:
+        alerts_qs = TouristAlert.objects.select_related(
+            'tourist', 'device'
+        ).order_by('-created_at')
+
+        alerts_data = []
+        total_count = 0
+        pending_count = 0
+        acknowledged_count = 0
+        resolved_count = 0
+
+        for alert in alerts_qs:
+            total_count += 1
+            status_lower = (alert.status or 'pending').lower()
+            if status_lower == 'pending':
+                pending_count += 1
+            elif status_lower == 'acknowledged':
+                acknowledged_count += 1
+            elif status_lower == 'resolved':
+                resolved_count += 1
+
+            alerts_data.append({
+                'alert_id': alert.id,
+                'tourist_name': alert.tourist.name if alert.tourist else 'Unknown Tourist',
+                'tourist_code': alert.tourist.tourist_code if alert.tourist else 'N/A',
+                'tourist_phone': alert.tourist.phone if alert.tourist else 'N/A',
+                'emergency_contact_name': alert.tourist.emergency_contact_name if alert.tourist else 'N/A',
+                'emergency_contact_phone': alert.tourist.emergency_contact_phone if alert.tourist else 'N/A',
+                'device_code': alert.device.device_code if alert.device else 'N/A',
+                'device_name': alert.device.device_name if alert.device else 'N/A',
+                'latitude': float(alert.latitude) if alert.latitude is not None else None,
+                'longitude': float(alert.longitude) if alert.longitude is not None else None,
+                'created_date': alert.created_at.strftime('%d-%m-%Y') if alert.created_at else '',
+                'created_time': alert.created_at.strftime('%I:%M:%S %p') if alert.created_at else '',
+                'status': alert.status,
+                'status_display': alert.get_status_display() if hasattr(alert, 'get_status_display') else alert.status.capitalize(),
+            })
+
+        return JsonResponse({
+            'success': True,
+            'count': total_count,
+            'stats': {
+                'total': total_count,
+                'pending': pending_count,
+                'acknowledged': acknowledged_count,
+                'resolved': resolved_count,
+            },
+            'alerts': alerts_data
+        }, status=200)
+
+    except Exception as e:
+        logger.exception("Error fetching notifications list: %s", str(e))
+        return JsonResponse({
+            'success': False,
+            'message': 'Failed to retrieve notifications.',
+            'error': str(e)
+        }, status=500)

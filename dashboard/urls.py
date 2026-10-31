@@ -18,4 +18,7 @@ urlpatterns = [
     # Assignment History & Device Return
     path('assignments/', views.assignment_history, name='assignment_history'),
     path('assignments/<int:pk>/return/', views.device_return, name='device_return'),
+
+    # API Endpoints
+    path('api/notifications/', views.get_notifications_api, name='dashboard_notifications_api'),
 ]

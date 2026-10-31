@@ -1,108 +1,1168 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>SOS Notifications</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live SOS Notifications | Tourist SOS Safety Hub</title>
+  
+  <style>
+    :root {
+      --primary: #0E7490;
+      --primary-dark: #155E75;
+      --primary-light: #0891B2;
+      --primary-subtle: #ECFEFF;
+      --bg-page: #F1F5F9;
+      --card-bg: #FFFFFF;
+      --border-color: #E2E8F0;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --text-light: #94A3B8;
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f1f5f9;
-            padding: 25px;
-        }
+      /* Status Colors */
+      --danger: #EF4444;
+      --danger-bg: #FEE2E2;
+      --danger-border: #FCA5A5;
+      --danger-text: #991B1B;
 
-        h2 {
-            color: #0e7490;
-        }
+      --warning: #F59E0B;
+      --warning-bg: #FEF3C7;
+      --warning-border: #FDE68A;
+      --warning-text: #92400E;
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
+      --success: #10B981;
+      --success-bg: #D1FAE5;
+      --success-border: #A7F3D0;
+      --success-text: #065F46;
 
-        th, td {
-            padding: 12px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
+      --info: #3B82F6;
+      --info-bg: #DBEAFE;
+      --info-text: #1E40AF;
+    }
 
-        th {
-            background: #0e7490;
-            color: white;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        .pending {
-            color: red;
-            font-weight: bold;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      padding: 24px 32px;
+      min-height: 100vh;
+    }
 
-        .acknowledged {
-            color: #d97706;
-            font-weight: bold;
-        }
+    /* Container */
+    .dashboard-container {
+      max-width: 1360px;
+      margin: 0 auto;
+    }
 
-        .resolved {
-            color: green;
-            font-weight: bold;
-        }
+    /* Top Navigation Header */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-        a {
-            color: #0e7490;
-        }
-    </style>
+    .header-title-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 10px rgba(14, 116, 144, 0.25);
+    }
+
+    .title-text h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background-color: #DCFCE7;
+      color: #166534;
+      border: 1px solid #BBF7D0;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #22C55E;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: pulseGreen 1.8s infinite;
+    }
+
+    @keyframes pulseGreen {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      }
+      70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+      }
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+      }
+    }
+
+    .title-text p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Header Controls */
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sync-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: var(--card-bg);
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .status-ping {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #10B981;
+      transition: background-color 0.3s;
+    }
+
+    .status-ping.fetching {
+      background-color: #3B82F6;
+      animation: pulseBlue 1s infinite;
+    }
+
+    .status-ping.error {
+      background-color: #EF4444;
+      animation: pulseRed 1s infinite;
+    }
+
+    @keyframes pulseBlue {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    @keyframes pulseRed {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--card-bg);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-action:hover {
+      background: #F8FAFC;
+      border-color: #CBD5E1;
+      color: var(--primary);
+    }
+
+    .btn-action.active-sound {
+      background-color: #ECFEFF;
+      border-color: #A5F3FC;
+      color: #0E7490;
+    }
+
+    .btn-action.muted-sound {
+      background-color: #F8FAFC;
+      color: #94A3B8;
+    }
+
+    .btn-action svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-refresh svg.spinning {
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Metric Counters Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 18px 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-value {
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--text-main);
+      transition: color 0.3s;
+    }
+
+    .stat-card.stat-pending {
+      border-left: 4px solid var(--danger);
+    }
+    .stat-card.stat-pending .stat-value {
+      color: var(--danger-text);
+    }
+
+    .stat-card.stat-acknowledged {
+      border-left: 4px solid var(--warning);
+    }
+    .stat-card.stat-acknowledged .stat-value {
+      color: var(--warning-text);
+    }
+
+    .stat-card.stat-resolved {
+      border-left: 4px solid var(--success);
+    }
+    .stat-card.stat-resolved .stat-value {
+      color: var(--success-text);
+    }
+
+    .stat-card.stat-total {
+      border-left: 4px solid var(--primary);
+    }
+    .stat-card.stat-total .stat-value {
+      color: var(--primary);
+    }
+
+    .stat-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-pending .stat-icon { background: var(--danger-bg); color: var(--danger); }
+    .stat-acknowledged .stat-icon { background: var(--warning-bg); color: var(--warning); }
+    .stat-resolved .stat-icon { background: var(--success-bg); color: var(--success); }
+    .stat-total .stat-icon { background: var(--primary-subtle); color: var(--primary); }
+
+    /* Alert Banner (Error / Disconnected) */
+    .alert-banner {
+      display: none;
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      color: #92400E;
+      padding: 12px 18px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .alert-banner.show {
+      display: flex;
+    }
+
+    /* Main Table Card */
+    .table-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    .table-toolbar {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color);
+      background: #FAFAFC;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-btn:hover {
+      background: #F1F5F9;
+      color: var(--text-main);
+    }
+
+    .filter-btn.active {
+      background: var(--card-bg);
+      color: var(--primary);
+      border-color: var(--border-color);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .search-box {
+      position: relative;
+      min-width: 260px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 7px 12px 7px 32px;
+      font-size: 0.82rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--card-bg);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary);
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--text-light);
+    }
+
+    /* Table Component */
+    .table-responsive {
+      overflow-x: auto;
+      min-height: 250px;
+      position: relative;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    thead th {
+      background: #F8FAFC;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 14px 18px;
+      border-bottom: 1px solid #F1F5F9;
+      font-size: 0.86rem;
+      vertical-align: middle;
+      color: var(--text-main);
+    }
+
+    tbody tr {
+      transition: background-color 0.2s;
+    }
+
+    tbody tr:hover {
+      background-color: #F8FAFC;
+    }
+
+    /* New Alert Arrival Animation */
+    @keyframes slideInAlert {
+      from {
+        opacity: 0;
+        transform: translateY(-16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes emergencyGlow {
+      0% {
+        background-color: #FEF2F2;
+        box-shadow: inset 4px 0 0 var(--danger);
+      }
+      50% {
+        background-color: #FEE2E2;
+        box-shadow: inset 6px 0 0 var(--danger);
+      }
+      100% {
+        background-color: transparent;
+        box-shadow: none;
+      }
+    }
+
+    .row-new {
+      animation: slideInAlert 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                 emergencyGlow 8s ease-out forwards;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+
+    .badge-pending {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border: 1px solid var(--danger-border);
+    }
+
+    .badge-acknowledged {
+      background: var(--warning-bg);
+      color: var(--warning-text);
+      border: 1px solid var(--warning-border);
+    }
+
+    .badge-resolved {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border: 1px solid var(--success-border);
+    }
+
+    .badge-new {
+      background: var(--danger);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      animation: pulseBadge 1.5s infinite;
+    }
+
+    @keyframes pulseBadge {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.85; }
+    }
+
+    .device-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #F1F5F9;
+      color: var(--primary-dark);
+      padding: 3px 8px;
+      border-radius: 5px;
+      border: 1px solid #CBD5E1;
+      display: inline-block;
+    }
+
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      background: var(--primary-subtle);
+      border-radius: 5px;
+      transition: background-color 0.15s;
+    }
+
+    .map-link:hover {
+      background: #CFFAFE;
+      text-decoration: underline;
+    }
+
+    .map-link svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      padding: 50px 20px;
+      text-align: center;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      color: var(--text-light);
+      margin-bottom: 12px;
+    }
+
+    .empty-state h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .empty-state p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      padding: 60px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #E2E8F0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Sound Enable Prompt Pill */
+    .audio-notice {
+      display: none;
+      font-size: 0.78rem;
+      color: #B45309;
+      background: #FEF3C7;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+      .header-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header-controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  </style>
 </head>
 
 <body>
+  <div class="dashboard-container">
+    <!-- Top Bar -->
+    <header class="header-bar">
+      <div class="header-title-group">
+        <div class="brand-icon">
+          <!-- Emergency Shield Icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="title-text">
+          <h1>
+            SOS Notifications
+            <span class="live-indicator"><span class="live-dot"></span>Live Feed</span>
+          </h1>
+          <p>Real-time tourist emergency tracking and wristband signal monitoring</p>
+        </div>
+      </div>
 
-    <h2>SOS Notifications</h2>
+      <div class="header-controls">
+        <a href="/" class="btn-action" title="Go to Main Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Dashboard
+        </a>
 
-    <table>
-        <thead>
+        <a href="/devices/" class="btn-action" title="View Registered Devices">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Devices
+        </a>
+
+        <div class="sync-status">
+          <span class="status-ping" id="statusPing"></span>
+          <span id="statusText">Connecting...</span>
+        </div>
+
+        <button type="button" class="btn-action btn-refresh" id="btnRefresh" title="Refresh Now">
+          <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+
+        <button type="button" class="btn-action active-sound" id="btnSound" title="Toggle Alert Sound">
+          <span id="soundIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          </span>
+          <span id="soundText">Sound: ON</span>
+        </button>
+
+        <span class="audio-notice" id="audioNotice" title="Click anywhere to enable alert sound">
+          Click anywhere to enable sound
+        </span>
+      </div>
+    </header>
+
+    <!-- Error Banner (shows on connection loss) -->
+    <div class="alert-banner" id="errorBanner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="errorMessage">Unable to sync live alerts. Retrying in 5 seconds...</span>
+    </div>
+
+    <!-- Stats Summary Cards -->
+    <section class="stats-grid">
+      <div class="stat-card stat-total">
+        <div>
+          <div class="stat-label">Total Signals</div>
+          <div class="stat-value" id="countTotal">0</div>
+        </div>
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+        </div>
+      </div>
+
+      <div class="stat-card stat-pending">
+        <div>
+          <div class="stat-label">Pending / Critical</div>
+          <div class="stat-value" id="countPending">0</div>
+        </div>
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+      </div>
+
+      <div class="stat-card stat-acknowledged">
+        <div>
+          <div class="stat-label">Acknowledged</div>
+          <div class="stat-value" id="countAcknowledged">0</div>
+        </div>
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+        </div>
+      </div>
+
+      <div class="stat-card stat-resolved">
+        <div>
+          <div class="stat-label">Resolved / Safe</div>
+          <div class="stat-value" id="countResolved">0</div>
+        </div>
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Table Card Container -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="filter-tabs">
+          <button type="button" class="filter-btn active" data-filter="all">All Alerts</button>
+          <button type="button" class="filter-btn" data-filter="pending">Pending</button>
+          <button type="button" class="filter-btn" data-filter="acknowledged">Acknowledged</button>
+          <button type="button" class="filter-btn" data-filter="resolved">Resolved</button>
+        </div>
+
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Search tourist, device code, phone..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="notificationsTable">
+          <thead>
             <tr>
-                <th>Alert ID</th>
-                <th>Tourist</th>
-                <th>Device ID</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Status</th>
+              <th>Alert ID</th>
+              <th>Tourist</th>
+              <th>Emergency Contact</th>
+              <th>Wristband Device</th>
+              <th>GPS Location</th>
+              <th>Date & Time</th>
+              <th>Status</th>
             </tr>
-        </thead>
+          </thead>
+          <tbody id="notificationsTbody">
+            <!-- Dynamically populated via JavaScript -->
+          </tbody>
+        </table>
 
-        <tbody>
-            {% for alert in alerts %}
-            <tr>
-                <td><strong>#{{ alert.id }}</strong></td>
-                <td>
-                    <strong>{{ alert.tourist.name }}</strong>
-                    <div style="font-size: 0.85em; color: #475569;">Code: {{ alert.tourist.tourist_code }} | Tel: {{ alert.tourist.phone }}</div>
-                    {% if alert.tourist.emergency_contact_name %}
-                    <div style="font-size: 0.8em; color: #b91c1c;">Emergency: {{ alert.tourist.emergency_contact_name }} ({{ alert.tourist.emergency_contact_phone }})</div>
-                    {% endif %}
-                </td>
-                <td>
-                    <strong>{{ alert.device.device_code }}</strong>
-                    {% if alert.device.device_name and alert.device.device_name != alert.device.device_code %}
-                    <div style="font-size: 0.85em; color: #64748b;">{{ alert.device.device_name }}</div>
-                    {% endif %}
-                </td>
-                <td>{{ alert.latitude|default:"N/A" }}</td>
-                <td>{{ alert.longitude|default:"N/A" }}</td>
-                <td>{{ alert.created_at|date:"d-m-Y" }}</td>
-                <td>{{ alert.created_at|time:"h:i:s A" }}</td>
-                <td class="{{ alert.status }}">
-                    {{ alert.get_status_display }}
-                </td>
-            </tr>
+        <!-- Initial Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+          <div class="spinner"></div>
+          <span>Connecting to SOS stream...</span>
+        </div>
 
-            {% empty %}
-            <tr>
-                <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">No SOS notifications found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <!-- Empty State Container -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          <h3>No SOS Notifications</h3>
+          <p>The monitoring hub is actively listening for emergency signals from registered wristbands.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- JavaScript Polling, Audio Synthesizer & Dynamic DOM Engine -->
+  <script>
+    // =========================================================================
+    // 1. STATE & CONSTANTS
+    // =========================================================================
+    const API_URL = '/api/notifications/';
+    const POLL_INTERVAL_MS = 5000;
+
+    let isFetching = false;
+    let isFirstLoad = true;
+    let pollTimer = null;
+    let soundEnabled = true;
+
+    // Track known IDs to detect genuinely new alerts
+    const knownAlertIds = new Set();
+    let cachedAlerts = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    // Elements
+    const tbody = document.getElementById('notificationsTbody');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const emptyState = document.getElementById('emptyState');
+    const statusPing = document.getElementById('statusPing');
+    const statusText = document.getElementById('statusText');
+    const errorBanner = document.getElementById('errorBanner');
+    const errorMessage = document.getElementById('errorMessage');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const btnSound = document.getElementById('btnSound');
+    const soundText = document.getElementById('soundText');
+    const soundIcon = document.getElementById('soundIcon');
+    const audioNotice = document.getElementById('audioNotice');
+    const searchInput = document.getElementById('searchInput');
+
+    // Counters
+    const countTotal = document.getElementById('countTotal');
+    const countPending = document.getElementById('countPending');
+    const countAcknowledged = document.getElementById('countAcknowledged');
+    const countResolved = document.getElementById('countResolved');
+
+    // =========================================================================
+    // 2. SYNTHESIZED EMERGENCY CHIME (Web Audio API - Zero External Files)
+    // =========================================================================
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Play a distinct, professional 2-tone emergency alert chime
+    function playEmergencySound() {
+      if (!soundEnabled) return;
+
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime;
+
+        // Tone 1: 880 Hz (A5)
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, now);
+        gain1.gain.setValueAtTime(0.2, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.18);
+
+        // Tone 2: 1320 Hz (E6) - higher urgent pitch
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(1320, now + 0.14);
+        gain2.gain.setValueAtTime(0.25, now + 0.14);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.14);
+        osc2.stop(now + 0.42);
+      } catch (err) {
+        console.warn('Audio playback prevented by browser policy:', err);
+      }
+    }
+
+    // Unlock browser audio upon first user gesture
+    function unlockAudio() {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+          audioNotice.style.display = 'none';
+        });
+      }
+    }
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
+
+    // Sound toggle control
+    btnSound.addEventListener('click', () => {
+      unlockAudio();
+      soundEnabled = !soundEnabled;
+      if (soundEnabled) {
+        btnSound.className = 'btn-action active-sound';
+        soundText.textContent = 'Sound: ON';
+        soundIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
+        // Brief preview chirp to confirm audio is active
+        playEmergencySound();
+      } else {
+        btnSound.className = 'btn-action muted-sound';
+        soundText.textContent = 'Sound: MUTED';
+        soundIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+      }
+    });
+
+    // =========================================================================
+    // 3. FETCH & POLLING ENGINE
+    // =========================================================================
+    async function fetchNotifications(isManual = false) {
+      if (isFetching) return;
+      isFetching = true;
+
+      if (isManual) {
+        refreshIcon.classList.add('spinning');
+      }
+      statusPing.className = 'status-ping fetching';
+
+      try {
+        const response = await fetch(API_URL, {
+          headers: { 'Accept': 'application/json' },
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          errorBanner.classList.remove('show');
+          statusPing.className = 'status-ping';
+          const nowStr = new Date().toLocaleTimeString();
+          statusText.textContent = `Live (${nowStr})`;
+
+          processNotifications(data.alerts || [], data.stats || {});
+        } else {
+          throw new Error(data.message || 'Server error');
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+        statusPing.className = 'status-ping error';
+        statusText.textContent = 'Disconnected';
+        errorMessage.textContent = 'Connection to live alerts interrupted. Retrying automatically...';
+        errorBanner.classList.add('show');
+      } finally {
+        isFetching = false;
+        loadingOverlay.style.display = 'none';
+        if (isManual) {
+          setTimeout(() => refreshIcon.classList.remove('spinning'), 500);
+        }
+        if (isFirstLoad) {
+          isFirstLoad = false;
+        }
+      }
+    }
+
+    // Schedule next polling cycle
+    function scheduleNextPoll() {
+      if (pollTimer) clearTimeout(pollTimer);
+      pollTimer = setTimeout(() => {
+        fetchNotifications().then(scheduleNextPoll);
+      }, POLL_INTERVAL_MS);
+    }
+
+    // Manual Refresh button
+    btnRefresh.addEventListener('click', () => {
+      fetchNotifications(true);
+      scheduleNextPoll(); // reset timer
+    });
+
+    // =========================================================================
+    // 4. DATA PROCESSING & NEW ALERT DETECTION
+    // =========================================================================
+    function processNotifications(alerts, stats) {
+      cachedAlerts = alerts;
+
+      // Update counters
+      animateCounter(countTotal, stats.total || alerts.length);
+      animateCounter(countPending, stats.pending || 0);
+      animateCounter(countAcknowledged, stats.acknowledged || 0);
+      animateCounter(countResolved, stats.resolved || 0);
+
+      // Detect genuinely new alerts
+      const newlyDiscoveredIds = [];
+      alerts.forEach(alert => {
+        if (!knownAlertIds.has(alert.alert_id)) {
+          if (!isFirstLoad) {
+            newlyDiscoveredIds.push(alert.alert_id);
+          }
+          knownAlertIds.add(alert.alert_id);
+        }
+      });
+
+      // Play alert chime if new emergency alerts arrived
+      if (newlyDiscoveredIds.length > 0) {
+        playEmergencySound();
+      }
+
+      // Render the table
+      renderTable(newlyDiscoveredIds);
+    }
+
+    function animateCounter(elem, targetVal) {
+      if (!elem) return;
+      const currentVal = parseInt(elem.textContent) || 0;
+      if (currentVal === targetVal) return;
+      elem.textContent = targetVal;
+    }
+
+    // =========================================================================
+    // 5. TABLE RENDERING WITH ANIMATIONS & FILTERING
+    // =========================================================================
+    function renderTable(newlyDiscoveredIds = []) {
+      const newIdsSet = new Set(newlyDiscoveredIds);
+
+      // Filter alerts based on active tab and search query
+      const filtered = cachedAlerts.filter(alert => {
+        // Tab status filter
+        if (currentFilter !== 'all') {
+          const statusLower = (alert.status || '').toLowerCase();
+          if (statusLower !== currentFilter) return false;
+        }
+
+        // Search text filter
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const matchTourist = (alert.tourist_name || '').toLowerCase().includes(q) ||
+                               (alert.tourist_code || '').toLowerCase().includes(q) ||
+                               (alert.tourist_phone || '').toLowerCase().includes(q);
+          const matchDevice = (alert.device_code || '').toLowerCase().includes(q) ||
+                              (alert.device_name || '').toLowerCase().includes(q);
+          const matchStatus = (alert.status || '').toLowerCase().includes(q);
+          if (!matchTourist && !matchDevice && !matchStatus) return false;
+        }
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      // Build rows
+      const rowsHtml = filtered.map(alert => {
+        const isNew = newIdsSet.has(alert.alert_id);
+        const rowClass = isNew ? 'row-new' : '';
+        const newBadge = isNew ? '<span class="badge-new">NEW</span>' : '';
+
+        // Status badge
+        const statusLower = (alert.status || 'pending').toLowerCase();
+        let badgeClass = 'badge-pending';
+        if (statusLower === 'acknowledged') badgeClass = 'badge-acknowledged';
+        if (statusLower === 'resolved') badgeClass = 'badge-resolved';
+
+        // Location formatting
+        const hasCoords = alert.latitude !== null && alert.longitude !== null;
+        const coordsHtml = hasCoords
+          ? `<div>${alert.latitude.toFixed(4)}, ${alert.longitude.toFixed(4)}</div>
+             <a href="https://maps.google.com/?q=${alert.latitude},${alert.longitude}" target="_blank" rel="noopener" class="map-link">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+               View Map
+             </a>`
+          : '<span style="color: var(--text-light);">No GPS</span>';
+
+        return `
+          <tr class="${rowClass}" data-id="${alert.alert_id}">
+            <td>
+              <strong>#${alert.alert_id}</strong>
+              ${newBadge}
+            </td>
+            <td>
+              <div><strong>${escapeHtml(alert.tourist_name)}</strong></div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">
+                Code: ${escapeHtml(alert.tourist_code)} | Tel: ${escapeHtml(alert.tourist_phone)}
+              </div>
+            </td>
+            <td>
+              <div><strong>${escapeHtml(alert.emergency_contact_name || 'N/A')}</strong></div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">
+                ${escapeHtml(alert.emergency_contact_phone || '')}
+              </div>
+            </td>
+            <td>
+              <span class="device-pill">${escapeHtml(alert.device_code)}</span>
+              ${alert.device_name && alert.device_name !== alert.device_code 
+                ? `<div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">${escapeHtml(alert.device_name)}</div>` 
+                : ''}
+            </td>
+            <td>${coordsHtml}</td>
+            <td>
+              <div>${escapeHtml(alert.created_date)}</div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">${escapeHtml(alert.created_time)}</div>
+            </td>
+            <td>
+              <span class="badge ${badgeClass}">
+                ${escapeHtml(alert.status_display || alert.status)}
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rowsHtml;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // =========================================================================
+    // 6. FILTER TABS & SEARCH INPUT LISTENERS
+    // =========================================================================
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.getAttribute('data-filter');
+        renderTable();
+      });
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      renderTable();
+    });
+
+    // =========================================================================
+    // 7. INITIALIZATION ON DOM READY
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchNotifications().then(scheduleNextPoll);
+    });
+  </script>
 </body>
 </html>
