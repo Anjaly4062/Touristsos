@@ -374,7 +374,7 @@ import json
 import logging
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from .models import TouristAlert, Tourist, SOSDevice
 
 logger = logging.getLogger(__name__)
@@ -482,7 +482,8 @@ def create_tourist_alert(request):
             device=device,
             latitude=latitude,
             longitude=longitude,
-            status='pending'
+            status='pending',
+            is_read=False
         )
 
         logger.info(
@@ -510,7 +511,8 @@ def create_tourist_alert(request):
             'longitude': float(alert.longitude) if alert.longitude is not None else None,
             'emergency_message': emergency_message,
             'status': alert.status,
-            'created_at': alert.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_read': alert.is_read,
+            'created_at': timezone.localtime(alert.created_at).strftime('%d %b %Y, %I:%M %p') if alert.created_at else '',
         }, status=201)
 
     except Exception as e:
@@ -541,12 +543,16 @@ def get_notifications_api(request):
 
         alerts_data = []
         total_count = 0
+        new_count = 0
         pending_count = 0
         acknowledged_count = 0
         resolved_count = 0
 
         for alert in alerts_qs:
             total_count += 1
+            if not alert.is_read:
+                new_count += 1
+
             status_lower = (alert.status or 'pending').lower()
             if status_lower == 'pending':
                 pending_count += 1
@@ -554,6 +560,9 @@ def get_notifications_api(request):
                 acknowledged_count += 1
             elif status_lower == 'resolved':
                 resolved_count += 1
+
+            local_created = timezone.localtime(alert.created_at) if alert.created_at else None
+            formatted_dt = local_created.strftime('%d %b %Y, %I:%M %p') if local_created else 'N/A'
 
             alerts_data.append({
                 'alert_id': alert.id,
@@ -566,10 +575,12 @@ def get_notifications_api(request):
                 'device_name': alert.device.device_name if alert.device else 'N/A',
                 'latitude': float(alert.latitude) if alert.latitude is not None else None,
                 'longitude': float(alert.longitude) if alert.longitude is not None else None,
-                'created_date': alert.created_at.strftime('%d-%m-%Y') if alert.created_at else '',
-                'created_time': alert.created_at.strftime('%I:%M:%S %p') if alert.created_at else '',
+                'created_at_formatted': formatted_dt,
+                'created_date': local_created.strftime('%d %b %Y') if local_created else '',
+                'created_time': local_created.strftime('%I:%M %p') if local_created else '',
                 'status': alert.status,
                 'status_display': alert.get_status_display() if hasattr(alert, 'get_status_display') else alert.status.capitalize(),
+                'is_read': bool(alert.is_read),
             })
 
         return JsonResponse({
@@ -577,6 +588,7 @@ def get_notifications_api(request):
             'count': total_count,
             'stats': {
                 'total': total_count,
+                'new': new_count,
                 'pending': pending_count,
                 'acknowledged': acknowledged_count,
                 'resolved': resolved_count,
@@ -589,5 +601,74 @@ def get_notifications_api(request):
         return JsonResponse({
             'success': False,
             'message': 'Failed to retrieve notifications.',
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def mark_notification_read(request, alert_id=None):
+    """
+    Marks one or all SOS notifications as read/seen (is_read=True).
+    Can accept alert_id from URL or JSON payload:
+    - POST /api/alerts/<id>/mark-read/
+    - POST /api/notifications/mark-read/ with {'alert_id': 123}
+    - POST /api/notifications/mark-read/ with {'mark_all': true}
+    """
+    try:
+        target_id = alert_id
+        mark_all = False
+
+        if request.body:
+            try:
+                data = json.loads(request.body)
+                if isinstance(data, dict):
+                    if data.get('mark_all'):
+                        mark_all = True
+                    elif data.get('alert_id'):
+                        target_id = data.get('alert_id')
+            except Exception:
+                pass
+
+        if mark_all or str(target_id).lower() == 'all':
+            updated = TouristAlert.objects.filter(is_read=False).update(is_read=True)
+            return JsonResponse({
+                'success': True,
+                'message': f'All {updated} alerts marked as seen.',
+                'updated_count': updated
+            })
+
+        if target_id is not None:
+            try:
+                target_id = int(target_id)
+            except (ValueError, TypeError):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid alert ID provided.'
+                }, status=400)
+
+            updated = TouristAlert.objects.filter(id=target_id).update(is_read=True)
+            if updated == 0:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Alert #{target_id} not found.'
+                }, status=404)
+
+            return JsonResponse({
+                'success': True,
+                'message': f'Alert #{target_id} marked as seen.',
+                'updated_count': updated
+            })
+
+        return JsonResponse({
+            'success': False,
+            'message': 'No alert ID or mark_all flag specified.'
+        }, status=400)
+
+    except Exception as e:
+        logger.exception("Error marking notification as read: %s", str(e))
+        return JsonResponse({
+            'success': False,
+            'message': 'Server error while marking notification as seen.',
             'error': str(e)
         }, status=500)

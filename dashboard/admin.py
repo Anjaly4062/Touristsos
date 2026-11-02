@@ -28,7 +28,7 @@ class DeviceAssignmentAdmin(admin.ModelAdmin):
 
 @admin.register(TouristAlert)
 class TouristAlertAdmin(admin.ModelAdmin):
-    list_display = ('id', 'tourist', 'device', 'latitude', 'longitude', 'status', 'created_at')
+    list_display = ('id', 'tourist', 'device', 'latitude', 'longitude', 'status', 'is_read', 'created_at')
     search_fields = ('tourist__name', 'tourist__tourist_code', 'device__device_code')
-    list_filter = ('status', 'created_at')
+    list_filter = ('status', 'is_read', 'created_at')
     ordering = ('-created_at',)

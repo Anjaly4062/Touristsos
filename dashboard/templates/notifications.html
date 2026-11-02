@@ -55,7 +55,7 @@
 
     /* Container */
     .dashboard-container {
-      max-width: 1360px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
@@ -147,7 +147,7 @@
     .header-controls {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
@@ -229,6 +229,24 @@
       height: 16px;
     }
 
+    .btn-action.btn-sm {
+      padding: 5px 10px;
+      font-size: 0.76rem;
+    }
+
+    .btn-mark-seen {
+      background-color: #F0FDF4;
+      border-color: #BBF7D0;
+      color: #166534;
+      font-weight: 600;
+    }
+
+    .btn-mark-seen:hover {
+      background-color: #DCFCE7;
+      border-color: #86EFAC;
+      color: #14532D;
+    }
+
     .btn-refresh svg.spinning {
       animation: spin 0.8s linear infinite;
     }
@@ -237,10 +255,27 @@
       100% { transform: rotate(360deg); }
     }
 
+    /* Active Alarm Silence Button */
+    .btn-silence {
+      background: #FEE2E2 !important;
+      color: #991B1B !important;
+      border-color: #FCA5A5 !important;
+      font-weight: 700;
+      animation: emergencyPulse 1.2s infinite;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    @keyframes emergencyPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+
     /* Metric Counters Grid */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
@@ -263,7 +298,7 @@
     }
 
     .stat-label {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -278,25 +313,12 @@
       transition: color 0.3s;
     }
 
-    .stat-card.stat-pending {
+    .stat-card.stat-new {
       border-left: 4px solid var(--danger);
+      background: linear-gradient(to right, #FFF5F5, #FFFFFF);
     }
-    .stat-card.stat-pending .stat-value {
+    .stat-card.stat-new .stat-value {
       color: var(--danger-text);
-    }
-
-    .stat-card.stat-acknowledged {
-      border-left: 4px solid var(--warning);
-    }
-    .stat-card.stat-acknowledged .stat-value {
-      color: var(--warning-text);
-    }
-
-    .stat-card.stat-resolved {
-      border-left: 4px solid var(--success);
-    }
-    .stat-card.stat-resolved .stat-value {
-      color: var(--success-text);
     }
 
     .stat-card.stat-total {
@@ -304,6 +326,27 @@
     }
     .stat-card.stat-total .stat-value {
       color: var(--primary);
+    }
+
+    .stat-card.stat-pending {
+      border-left: 4px solid var(--warning);
+    }
+    .stat-card.stat-pending .stat-value {
+      color: var(--warning-text);
+    }
+
+    .stat-card.stat-acknowledged {
+      border-left: 4px solid var(--info);
+    }
+    .stat-card.stat-acknowledged .stat-value {
+      color: var(--info-text);
+    }
+
+    .stat-card.stat-resolved {
+      border-left: 4px solid var(--success);
+    }
+    .stat-card.stat-resolved .stat-value {
+      color: var(--success-text);
     }
 
     .stat-icon {
@@ -315,10 +358,11 @@
       justify-content: center;
     }
 
-    .stat-pending .stat-icon { background: var(--danger-bg); color: var(--danger); }
-    .stat-acknowledged .stat-icon { background: var(--warning-bg); color: var(--warning); }
-    .stat-resolved .stat-icon { background: var(--success-bg); color: var(--success); }
+    .stat-new .stat-icon { background: var(--danger-bg); color: var(--danger); }
     .stat-total .stat-icon { background: var(--primary-subtle); color: var(--primary); }
+    .stat-pending .stat-icon { background: var(--warning-bg); color: var(--warning); }
+    .stat-acknowledged .stat-icon { background: var(--info-bg); color: var(--info); }
+    .stat-resolved .stat-icon { background: var(--success-bg); color: var(--success); }
 
     /* Alert Banner (Error / Disconnected) */
     .alert-banner {
@@ -338,17 +382,77 @@
       display: flex;
     }
 
-    /* Main Table Card */
+    /* Cards for Tables */
     .table-card {
       background: var(--card-bg);
       border-radius: 12px;
       border: 1px solid var(--border-color);
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
       overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .card-section-header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-section-header.new-alerts-header {
+      background: #FFF5F5;
+      border-bottom: 1px solid #FED7D7;
+    }
+
+    .card-section-header.all-alerts-header {
+      background: #FAFAFC;
+    }
+
+    .section-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .section-icon.icon-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .section-icon.icon-primary {
+      background: var(--primary-subtle);
+      color: var(--primary);
+    }
+
+    .section-title-wrap h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title-wrap p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 1px;
     }
 
     .table-toolbar {
-      padding: 16px 20px;
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -420,7 +524,7 @@
     /* Table Component */
     .table-responsive {
       overflow-x: auto;
-      min-height: 250px;
+      min-height: 160px;
       position: relative;
     }
 
@@ -433,7 +537,7 @@
     thead th {
       background: #F8FAFC;
       color: var(--text-muted);
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -443,9 +547,9 @@
     }
 
     tbody td {
-      padding: 14px 18px;
+      padding: 13px 18px;
       border-bottom: 1px solid #F1F5F9;
-      font-size: 0.86rem;
+      font-size: 0.85rem;
       vertical-align: middle;
       color: var(--text-main);
     }
@@ -529,6 +633,7 @@
       border-radius: 4px;
       margin-left: 6px;
       animation: pulseBadge 1.5s infinite;
+      display: inline-block;
     }
 
     @keyframes pulseBadge {
@@ -554,7 +659,7 @@
       gap: 4px;
       color: var(--primary);
       text-decoration: none;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
       padding: 3px 8px;
       background: var(--primary-subtle);
@@ -572,34 +677,34 @@
       height: 12px;
     }
 
-    /* Empty State */
+    /* Empty States */
     .empty-state {
-      padding: 50px 20px;
+      padding: 40px 20px;
       text-align: center;
     }
 
     .empty-state svg {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       color: var(--text-light);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .empty-state h3 {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--text-main);
       margin-bottom: 4px;
     }
 
     .empty-state p {
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
     }
 
     /* Loading Overlay */
     .loading-overlay {
-      padding: 60px 20px;
+      padding: 50px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -618,7 +723,6 @@
       animation: spin 0.8s linear infinite;
     }
 
-    /* Sound Enable Prompt Pill */
     .audio-notice {
       display: none;
       font-size: 0.78rem;
@@ -627,23 +731,6 @@
       padding: 4px 10px;
       border-radius: 6px;
       cursor: pointer;
-    }
-
-    /* Active Alarm Silence Button */
-    .btn-silence {
-      background: #FEE2E2 !important;
-      color: #991B1B !important;
-      border-color: #FCA5A5 !important;
-      font-weight: 700;
-      animation: emergencyPulse 1.2s infinite;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    @keyframes emergencyPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
-      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
     }
 
     @media (max-width: 768px) {
@@ -664,11 +751,11 @@
 
 <body>
   <div class="dashboard-container">
-    <!-- Top Bar -->
+    <!-- Top Navigation Header -->
     <header class="header-bar">
       <div class="header-title-group">
         <div class="brand-icon">
-          <!-- Emergency Shield Icon -->
+          <!-- SOS Emergency Shield -->
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             <line x1="12" y1="8" x2="12" y2="12"/>
@@ -731,6 +818,16 @@
 
     <!-- Stats Summary Cards -->
     <section class="stats-grid">
+      <div class="stat-card stat-new">
+        <div>
+          <div class="stat-label">New / Unread</div>
+          <div class="stat-value" id="countNew">0</div>
+        </div>
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+      </div>
+
       <div class="stat-card stat-total">
         <div>
           <div class="stat-label">Total Signals</div>
@@ -747,7 +844,7 @@
           <div class="stat-value" id="countPending">0</div>
         </div>
         <div class="stat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
       </div>
 
@@ -772,14 +869,69 @@
       </div>
     </section>
 
-    <!-- Table Card Container -->
-    <div class="table-card">
-      <div class="table-toolbar">
-        <div class="filter-tabs">
-          <button type="button" class="filter-btn active" data-filter="all">All Alerts</button>
-          <button type="button" class="filter-btn" data-filter="pending">Pending</button>
-          <button type="button" class="filter-btn" data-filter="acknowledged">Acknowledged</button>
-          <button type="button" class="filter-btn" data-filter="resolved">Resolved</button>
+    <!-- SECTION 1: NEW ALERTS (Unread / Unseen) -->
+    <div class="table-card" id="newAlertsCard">
+      <div class="card-section-header new-alerts-header">
+        <div class="section-title-wrap">
+          <div class="section-icon icon-danger">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div>
+            <h2>
+              New Alerts
+              <span class="badge badge-pending" id="badgeNewAlertsCount">0 New</span>
+            </h2>
+            <p>Active SOS emergency signals that have not yet been marked as seen</p>
+          </div>
+        </div>
+
+        <div>
+          <button type="button" class="btn-action" id="btnMarkAllRead" title="Mark all unread alerts as seen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Mark All as Seen
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="newAlertsTable">
+          <thead>
+            <tr>
+              <th>Alert ID</th>
+              <th>Tourist</th>
+              <th>Emergency Contact</th>
+              <th>Wristband Device</th>
+              <th>GPS Location</th>
+              <th>Date & Time (IST)</th>
+              <th>Status</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="newAlertsTbody">
+            <!-- Populated dynamically via JS -->
+          </tbody>
+        </table>
+
+        <!-- Empty State for New Alerts -->
+        <div class="empty-state" id="newAlertsEmpty" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <h3>All Caught Up!</h3>
+          <p>No unread SOS alerts. All emergency signals have been viewed and marked as seen.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: ALL ALERTS (Complete History) -->
+    <div class="table-card" id="allAlertsCard">
+      <div class="card-section-header all-alerts-header">
+        <div class="section-title-wrap">
+          <div class="section-icon icon-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          </div>
+          <div>
+            <h2>All Alerts</h2>
+            <p>Complete historical log of all SOS signals received by the hub</p>
+          </div>
         </div>
 
         <div class="search-box">
@@ -788,8 +940,17 @@
         </div>
       </div>
 
+      <div class="table-toolbar">
+        <div class="filter-tabs">
+          <button type="button" class="filter-btn active" data-filter="all">All Alerts</button>
+          <button type="button" class="filter-btn" data-filter="pending">Pending</button>
+          <button type="button" class="filter-btn" data-filter="acknowledged">Acknowledged</button>
+          <button type="button" class="filter-btn" data-filter="resolved">Resolved</button>
+        </div>
+      </div>
+
       <div class="table-responsive">
-        <table id="notificationsTable">
+        <table id="allAlertsTable">
           <thead>
             <tr>
               <th>Alert ID</th>
@@ -797,12 +958,12 @@
               <th>Emergency Contact</th>
               <th>Wristband Device</th>
               <th>GPS Location</th>
-              <th>Date & Time</th>
+              <th>Date & Time (IST)</th>
               <th>Status</th>
             </tr>
           </thead>
-          <tbody id="notificationsTbody">
-            <!-- Dynamically populated via JavaScript -->
+          <tbody id="allAlertsTbody">
+            <!-- Populated dynamically via JS -->
           </tbody>
         </table>
 
@@ -812,8 +973,8 @@
           <span>Connecting to SOS stream...</span>
         </div>
 
-        <!-- Empty State Container -->
-        <div class="empty-state" id="emptyState" style="display: none;">
+        <!-- Empty State for All Alerts -->
+        <div class="empty-state" id="allAlertsEmpty" style="display: none;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
           <h3>No SOS Notifications</h3>
           <p>The monitoring hub is actively listening for emergency signals from registered wristbands.</p>
@@ -822,12 +983,13 @@
     </div>
   </div>
 
-  <!-- JavaScript Polling, Audio Synthesizer & Dynamic DOM Engine -->
+  <!-- JavaScript Polling, Audio Synthesizer, Dynamic Mark-As-Seen & DOM Engine -->
   <script>
     // =========================================================================
     // 1. STATE & CONSTANTS
     // =========================================================================
     const API_URL = '/api/notifications/';
+    const MARK_READ_API_URL = '/api/notifications/mark-read/';
     const POLL_INTERVAL_MS = 5000;
 
     let isFetching = false;
@@ -841,10 +1003,12 @@
     let currentFilter = 'all';
     let searchQuery = '';
 
-    // Elements
-    const tbody = document.getElementById('notificationsTbody');
+    // DOM Elements
+    const newAlertsTbody = document.getElementById('newAlertsTbody');
+    const allAlertsTbody = document.getElementById('allAlertsTbody');
+    const newAlertsEmpty = document.getElementById('newAlertsEmpty');
+    const allAlertsEmpty = document.getElementById('allAlertsEmpty');
     const loadingOverlay = document.getElementById('loadingOverlay');
-    const emptyState = document.getElementById('emptyState');
     const statusPing = document.getElementById('statusPing');
     const statusText = document.getElementById('statusText');
     const errorBanner = document.getElementById('errorBanner');
@@ -858,15 +1022,18 @@
     const alarmCountdown = document.getElementById('alarmCountdown');
     const audioNotice = document.getElementById('audioNotice');
     const searchInput = document.getElementById('searchInput');
+    const btnMarkAllRead = document.getElementById('btnMarkAllRead');
+    const badgeNewAlertsCount = document.getElementById('badgeNewAlertsCount');
 
     // Counters
+    const countNew = document.getElementById('countNew');
     const countTotal = document.getElementById('countTotal');
     const countPending = document.getElementById('countPending');
     const countAcknowledged = document.getElementById('countAcknowledged');
     const countResolved = document.getElementById('countResolved');
 
     // =========================================================================
-    // 2. SYNTHESIZED EMERGENCY ALARM (Loud 30-Second Alarm Engine)
+    // 2. SYNTHESIZED EMERGENCY ALARM (Loud 30-Second Emergency Siren)
     // =========================================================================
     let audioCtx = null;
     let alarmIntervalId = null;
@@ -887,14 +1054,13 @@
       return audioCtx;
     }
 
-    // Play a single loud emergency dual-tone siren pulse
     function playSingleAlarmPulse(ctx) {
       if (!soundEnabled) return;
 
       try {
         const now = ctx.currentTime;
 
-        // Primary High-Impact Siren Sweep (Sawtooth wave for strong penetration)
+        // Primary High-Impact Siren Sweep (Sawtooth wave)
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
 
@@ -903,12 +1069,11 @@
         osc1.frequency.linearRampToValueAtTime(1400, now + 0.32);
         osc1.frequency.linearRampToValueAtTime(850, now + 0.62);
 
-        // Loud volume: 0.85
         gain1.gain.setValueAtTime(0.85, now);
         gain1.gain.setValueAtTime(0.85, now + 0.55);
         gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.64);
 
-        // Secondary Harmonic Tone (Triangle wave for richness and body)
+        // Secondary Harmonic Tone (Triangle wave)
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
 
@@ -921,7 +1086,6 @@
         gain2.gain.setValueAtTime(0.65, now + 0.55);
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.64);
 
-        // Low-pass filter to prevent harsh digital clipping while maintaining loudness
         const filter = ctx.createBiquadFilter();
         filter.type = 'lowpass';
         filter.frequency.setValueAtTime(2600, now);
@@ -940,7 +1104,6 @@
       }
     }
 
-    // Stop and silence the active alarm immediately
     function stopEmergencyAlarm() {
       if (alarmIntervalId) {
         clearInterval(alarmIntervalId);
@@ -961,19 +1124,16 @@
       }
     }
 
-    // Start loud repeating 30-second emergency alarm
     function startEmergencyAlarm(durationSeconds = 30) {
       if (!soundEnabled) return;
 
       const ctx = getAudioContext();
       if (!ctx) return;
 
-      // Clear any currently active alarm before starting new one
       stopEmergencyAlarm();
 
       alarmEndTime = Date.now() + (durationSeconds * 1000);
 
-      // Show Stop Alarm button with live countdown
       if (btnSilenceAlarm) {
         btnSilenceAlarm.style.display = 'inline-flex';
         if (alarmCountdown) {
@@ -981,10 +1141,8 @@
         }
       }
 
-      // Play first pulse immediately
       playSingleAlarmPulse(ctx);
 
-      // Pulse every 720ms for the full 30 seconds
       alarmIntervalId = setInterval(() => {
         if (!soundEnabled || Date.now() >= alarmEndTime) {
           stopEmergencyAlarm();
@@ -993,7 +1151,6 @@
         playSingleAlarmPulse(ctx);
       }, 720);
 
-      // Update countdown every second
       alarmCountdownInterval = setInterval(() => {
         const remainingMs = alarmEndTime - Date.now();
         const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
@@ -1005,31 +1162,27 @@
         }
       }, 500);
 
-      // Hard cutoff at 30 seconds
       alarmTimeoutId = setTimeout(() => {
         stopEmergencyAlarm();
       }, durationSeconds * 1000);
     }
 
-    // Silence button click listener
     if (btnSilenceAlarm) {
       btnSilenceAlarm.addEventListener('click', () => {
         stopEmergencyAlarm();
       });
     }
 
-    // Unlock browser audio upon first user gesture
     function unlockAudio() {
       if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume().then(() => {
-          audioNotice.style.display = 'none';
+          if (audioNotice) audioNotice.style.display = 'none';
         });
       }
     }
     document.addEventListener('click', unlockAudio, { once: true });
     document.addEventListener('keydown', unlockAudio, { once: true });
 
-    // Sound toggle control
     btnSound.addEventListener('click', () => {
       unlockAudio();
       soundEnabled = !soundEnabled;
@@ -1037,7 +1190,6 @@
         btnSound.className = 'btn-action active-sound';
         soundText.textContent = 'Sound: ON';
         soundIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>`;
-        // Brief 1-second preview pulse to test loudness
         const ctx = getAudioContext();
         if (ctx) playSingleAlarmPulse(ctx);
       } else {
@@ -1075,8 +1227,7 @@
         if (data.success) {
           errorBanner.classList.remove('show');
           statusPing.className = 'status-ping';
-          const nowStr = new Date().toLocaleTimeString();
-          statusText.textContent = `Live (${nowStr})`;
+          statusText.textContent = 'Connected (IST)';
 
           processNotifications(data.alerts || [], data.stats || {});
         } else {
@@ -1086,7 +1237,7 @@
         console.error('Polling error:', err);
         statusPing.className = 'status-ping error';
         statusText.textContent = 'Disconnected';
-        errorMessage.textContent = 'Connection to live alerts interrupted. Retrying automatically...';
+        errorMessage.textContent = 'Connection to live alerts interrupted. Retrying in 5s...';
         errorBanner.classList.add('show');
       } finally {
         isFetching = false;
@@ -1100,7 +1251,6 @@
       }
     }
 
-    // Schedule next polling cycle
     function scheduleNextPoll() {
       if (pollTimer) clearTimeout(pollTimer);
       pollTimer = setTimeout(() => {
@@ -1108,66 +1258,208 @@
       }, POLL_INTERVAL_MS);
     }
 
-    // Manual Refresh button
     btnRefresh.addEventListener('click', () => {
       fetchNotifications(true);
-      scheduleNextPoll(); // reset timer
+      scheduleNextPoll();
     });
 
     // =========================================================================
-    // 4. DATA PROCESSING & NEW ALERT DETECTION
+    // 4. DATA PROCESSING & NEW ALERT ARRIVAL DETECTION
     // =========================================================================
     function processNotifications(alerts, stats) {
       cachedAlerts = alerts;
 
+      // Calculate unread alerts
+      const unreadAlerts = alerts.filter(a => !a.is_read);
+
       // Update counters
+      animateCounter(countNew, unreadAlerts.length);
       animateCounter(countTotal, stats.total || alerts.length);
       animateCounter(countPending, stats.pending || 0);
       animateCounter(countAcknowledged, stats.acknowledged || 0);
       animateCounter(countResolved, stats.resolved || 0);
 
-      // Detect genuinely new alerts
+      badgeNewAlertsCount.textContent = `${unreadAlerts.length} New`;
+
+      // Detect genuinely newly arrived alerts (after initial page load)
       const newlyDiscoveredIds = [];
       alerts.forEach(alert => {
         if (!knownAlertIds.has(alert.alert_id)) {
-          if (!isFirstLoad) {
+          if (!isFirstLoad && !alert.is_read) {
             newlyDiscoveredIds.push(alert.alert_id);
           }
           knownAlertIds.add(alert.alert_id);
         }
       });
 
-      // Start loud 30-second emergency alarm if new emergency alerts arrived
+      // Play 30s alarm only if genuinely new unread alerts arrived via polling
       if (newlyDiscoveredIds.length > 0) {
         startEmergencyAlarm(30);
       }
 
-      // Render the table
-      renderTable(newlyDiscoveredIds);
+      // Render both New Alerts and All Alerts sections
+      renderTables(newlyDiscoveredIds);
     }
 
     function animateCounter(elem, targetVal) {
       if (!elem) return;
-      const currentVal = parseInt(elem.textContent) || 0;
-      if (currentVal === targetVal) return;
       elem.textContent = targetVal;
     }
 
     // =========================================================================
-    // 5. TABLE RENDERING WITH ANIMATIONS & FILTERING
+    // 5. MARK AS SEEN ACTIONS (API Call)
     // =========================================================================
-    function renderTable(newlyDiscoveredIds = []) {
+    async function markAlertSeen(alertId) {
+      try {
+        const response = await fetch(MARK_READ_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ alert_id: alertId })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          // Update cached local state
+          const target = cachedAlerts.find(a => a.alert_id === alertId);
+          if (target) {
+            target.is_read = true;
+          }
+          // Re-render
+          processNotifications(cachedAlerts, {
+            total: cachedAlerts.length,
+            pending: cachedAlerts.filter(a => (a.status||'').toLowerCase() === 'pending').length,
+            acknowledged: cachedAlerts.filter(a => (a.status||'').toLowerCase() === 'acknowledged').length,
+            resolved: cachedAlerts.filter(a => (a.status||'').toLowerCase() === 'resolved').length,
+          });
+        }
+      } catch (err) {
+        console.error('Error marking alert as seen:', err);
+      }
+    }
+
+    async function markAllAlertsSeen() {
+      try {
+        const response = await fetch(MARK_READ_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ mark_all: true })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          stopEmergencyAlarm();
+          cachedAlerts.forEach(a => { a.is_read = true; });
+          processNotifications(cachedAlerts, {
+            total: cachedAlerts.length,
+            pending: cachedAlerts.filter(a => (a.status||'').toLowerCase() === 'pending').length,
+            acknowledged: cachedAlerts.filter(a => (a.status||'').toLowerCase() === 'acknowledged').length,
+            resolved: cachedAlerts.filter(a => (a.status||'').toLowerCase() === 'resolved').length,
+          });
+        }
+      } catch (err) {
+        console.error('Error marking all alerts as seen:', err);
+      }
+    }
+
+    if (btnMarkAllRead) {
+      btnMarkAllRead.addEventListener('click', markAllAlertsSeen);
+    }
+
+    // =========================================================================
+    // 6. TABLE RENDERING (New Alerts & All Alerts)
+    // =========================================================================
+    function renderTables(newlyDiscoveredIds = []) {
       const newIdsSet = new Set(newlyDiscoveredIds);
 
-      // Filter alerts based on active tab and search query
-      const filtered = cachedAlerts.filter(alert => {
-        // Tab status filter
+      // --- SECTION 1: NEW ALERTS TABLE ---
+      const unreadAlerts = cachedAlerts.filter(a => !a.is_read);
+
+      if (unreadAlerts.length === 0) {
+        newAlertsTbody.innerHTML = '';
+        newAlertsEmpty.style.display = 'block';
+        btnMarkAllRead.style.display = 'none';
+      } else {
+        newAlertsEmpty.style.display = 'none';
+        btnMarkAllRead.style.display = 'inline-flex';
+
+        newAlertsTbody.innerHTML = unreadAlerts.map(alert => {
+          const isFresh = newIdsSet.has(alert.alert_id);
+          const rowClass = isFresh ? 'row-new' : '';
+
+          const statusLower = (alert.status || 'pending').toLowerCase();
+          let badgeClass = 'badge-pending';
+          if (statusLower === 'acknowledged') badgeClass = 'badge-acknowledged';
+          if (statusLower === 'resolved') badgeClass = 'badge-resolved';
+
+          const hasCoords = alert.latitude !== null && alert.longitude !== null;
+          const coordsHtml = hasCoords
+            ? `<div>${alert.latitude.toFixed(4)}, ${alert.longitude.toFixed(4)}</div>
+               <a href="https://maps.google.com/?q=${alert.latitude},${alert.longitude}" target="_blank" rel="noopener" class="map-link">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                 View Map
+               </a>`
+            : '<span style="color: var(--text-light);">No GPS</span>';
+
+          const timeDisplay = alert.created_at_formatted || `${alert.created_date} ${alert.created_time}`;
+
+          return `
+            <tr class="${rowClass}" data-id="${alert.alert_id}">
+              <td>
+                <strong>#${alert.alert_id}</strong>
+                <span class="badge-new">NEW</span>
+              </td>
+              <td>
+                <div><strong>${escapeHtml(alert.tourist_name)}</strong></div>
+                <div style="font-size: 0.76rem; color: var(--text-muted);">
+                  Code: ${escapeHtml(alert.tourist_code)} | Tel: ${escapeHtml(alert.tourist_phone)}
+                </div>
+              </td>
+              <td>
+                <div><strong>${escapeHtml(alert.emergency_contact_name || 'N/A')}</strong></div>
+                <div style="font-size: 0.76rem; color: var(--text-muted);">
+                  ${escapeHtml(alert.emergency_contact_phone || '')}
+                </div>
+              </td>
+              <td>
+                <span class="device-pill">${escapeHtml(alert.device_code)}</span>
+                ${alert.device_name && alert.device_name !== alert.device_code 
+                  ? `<div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">${escapeHtml(alert.device_name)}</div>` 
+                  : ''}
+              </td>
+              <td>${coordsHtml}</td>
+              <td>
+                <div><strong>${escapeHtml(timeDisplay)}</strong></div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Indian Standard Time</div>
+              </td>
+              <td>
+                <span class="badge ${badgeClass}">
+                  ${escapeHtml(alert.status_display || alert.status)}
+                </span>
+              </td>
+              <td style="text-align: right;">
+                <button type="button" class="btn-action btn-sm btn-mark-seen" onclick="markAlertSeen(${alert.alert_id})" title="Mark this alert as seen">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  Mark as Seen
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // --- SECTION 2: ALL ALERTS TABLE ---
+      const filteredAll = cachedAlerts.filter(alert => {
         if (currentFilter !== 'all') {
           const statusLower = (alert.status || '').toLowerCase();
           if (statusLower !== currentFilter) return false;
         }
 
-        // Search text filter
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
           const matchTourist = (alert.tourist_name || '').toLowerCase().includes(q) ||
@@ -1182,75 +1474,71 @@
         return true;
       });
 
-      if (filtered.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.style.display = 'block';
-        return;
+      if (filteredAll.length === 0) {
+        allAlertsTbody.innerHTML = '';
+        allAlertsEmpty.style.display = 'block';
+      } else {
+        allAlertsEmpty.style.display = 'none';
+
+        allAlertsTbody.innerHTML = filteredAll.map(alert => {
+          const isFresh = newIdsSet.has(alert.alert_id);
+          const rowClass = isFresh ? 'row-new' : '';
+          const newBadge = !alert.is_read ? '<span class="badge-new">NEW</span>' : '';
+
+          const statusLower = (alert.status || 'pending').toLowerCase();
+          let badgeClass = 'badge-pending';
+          if (statusLower === 'acknowledged') badgeClass = 'badge-acknowledged';
+          if (statusLower === 'resolved') badgeClass = 'badge-resolved';
+
+          const hasCoords = alert.latitude !== null && alert.longitude !== null;
+          const coordsHtml = hasCoords
+            ? `<div>${alert.latitude.toFixed(4)}, ${alert.longitude.toFixed(4)}</div>
+               <a href="https://maps.google.com/?q=${alert.latitude},${alert.longitude}" target="_blank" rel="noopener" class="map-link">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                 View Map
+               </a>`
+            : '<span style="color: var(--text-light);">No GPS</span>';
+
+          const timeDisplay = alert.created_at_formatted || `${alert.created_date} ${alert.created_time}`;
+
+          return `
+            <tr class="${rowClass}" data-id="${alert.alert_id}">
+              <td>
+                <strong>#${alert.alert_id}</strong>
+                ${newBadge}
+              </td>
+              <td>
+                <div><strong>${escapeHtml(alert.tourist_name)}</strong></div>
+                <div style="font-size: 0.76rem; color: var(--text-muted);">
+                  Code: ${escapeHtml(alert.tourist_code)} | Tel: ${escapeHtml(alert.tourist_phone)}
+                </div>
+              </td>
+              <td>
+                <div><strong>${escapeHtml(alert.emergency_contact_name || 'N/A')}</strong></div>
+                <div style="font-size: 0.76rem; color: var(--text-muted);">
+                  ${escapeHtml(alert.emergency_contact_phone || '')}
+                </div>
+              </td>
+              <td>
+                <span class="device-pill">${escapeHtml(alert.device_code)}</span>
+                ${alert.device_name && alert.device_name !== alert.device_code 
+                  ? `<div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">${escapeHtml(alert.device_name)}</div>` 
+                  : ''}
+              </td>
+              <td>${coordsHtml}</td>
+              <td>
+                <div><strong>${escapeHtml(timeDisplay)}</strong></div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Indian Standard Time</div>
+              </td>
+              <td>
+                <span class="badge ${badgeClass}">
+                  ${escapeHtml(alert.status_display || alert.status)}
+                </span>
+              </td>
+            </tr>
+          `;
+        }).join('');
       }
-
-      emptyState.style.display = 'none';
-
-      // Build rows
-      const rowsHtml = filtered.map(alert => {
-        const isNew = newIdsSet.has(alert.alert_id);
-        const rowClass = isNew ? 'row-new' : '';
-        const newBadge = isNew ? '<span class="badge-new">NEW</span>' : '';
-
-        // Status badge
-        const statusLower = (alert.status || 'pending').toLowerCase();
-        let badgeClass = 'badge-pending';
-        if (statusLower === 'acknowledged') badgeClass = 'badge-acknowledged';
-        if (statusLower === 'resolved') badgeClass = 'badge-resolved';
-
-        // Location formatting
-        const hasCoords = alert.latitude !== null && alert.longitude !== null;
-        const coordsHtml = hasCoords
-          ? `<div>${alert.latitude.toFixed(4)}, ${alert.longitude.toFixed(4)}</div>
-             <a href="https://maps.google.com/?q=${alert.latitude},${alert.longitude}" target="_blank" rel="noopener" class="map-link">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-               View Map
-             </a>`
-          : '<span style="color: var(--text-light);">No GPS</span>';
-
-        return `
-          <tr class="${rowClass}" data-id="${alert.alert_id}">
-            <td>
-              <strong>#${alert.alert_id}</strong>
-              ${newBadge}
-            </td>
-            <td>
-              <div><strong>${escapeHtml(alert.tourist_name)}</strong></div>
-              <div style="font-size: 0.78rem; color: var(--text-muted);">
-                Code: ${escapeHtml(alert.tourist_code)} | Tel: ${escapeHtml(alert.tourist_phone)}
-              </div>
-            </td>
-            <td>
-              <div><strong>${escapeHtml(alert.emergency_contact_name || 'N/A')}</strong></div>
-              <div style="font-size: 0.78rem; color: var(--text-muted);">
-                ${escapeHtml(alert.emergency_contact_phone || '')}
-              </div>
-            </td>
-            <td>
-              <span class="device-pill">${escapeHtml(alert.device_code)}</span>
-              ${alert.device_name && alert.device_name !== alert.device_code 
-                ? `<div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;">${escapeHtml(alert.device_name)}</div>` 
-                : ''}
-            </td>
-            <td>${coordsHtml}</td>
-            <td>
-              <div>${escapeHtml(alert.created_date)}</div>
-              <div style="font-size: 0.78rem; color: var(--text-muted);">${escapeHtml(alert.created_time)}</div>
-            </td>
-            <td>
-              <span class="badge ${badgeClass}">
-                ${escapeHtml(alert.status_display || alert.status)}
-              </span>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      tbody.innerHTML = rowsHtml;
     }
 
     function escapeHtml(str) {
@@ -1264,24 +1552,24 @@
     }
 
     // =========================================================================
-    // 6. FILTER TABS & SEARCH INPUT LISTENERS
+    // 7. FILTER TABS & SEARCH INPUT LISTENERS
     // =========================================================================
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentFilter = btn.getAttribute('data-filter');
-        renderTable();
+        renderTables();
       });
     });
 
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value.trim();
-      renderTable();
+      renderTables();
     });
 
     // =========================================================================
-    // 7. INITIALIZATION ON DOM READY
+    // 8. INITIALIZATION ON DOM READY
     // =========================================================================
     document.addEventListener('DOMContentLoaded', () => {
       fetchNotifications().then(scheduleNextPoll);

@@ -192,6 +192,11 @@ class TouristAlert(models.Model):
         default='pending'
     )
 
+    is_read = models.BooleanField(
+        default=False,
+        help_text='Indicates whether this alert has been viewed or marked as seen'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
